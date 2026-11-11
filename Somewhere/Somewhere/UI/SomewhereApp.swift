@@ -10,9 +10,13 @@ import SwiftData
 
 @main
 struct SomewhereApp: App {
+    init() {
+        ShelfNotifications.installDelegate()   // Kaitlyn: shelf reminders open the shelf tab
+    }
+
     var body: some Scene {
         WindowGroup {
-            WishlistView()
+            MainTabView()   // was WishlistView(); now wishlist + shelf tabs
                 #if DEBUG
                 .task { seedSampleItemsOnce() }
                 #endif

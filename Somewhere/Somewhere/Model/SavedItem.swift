@@ -51,8 +51,9 @@ final class SavedItem {
     var shelfReadyAt: Date = Date().addingTimeInterval(SavedItem.defaultCoolingPeriod)
     var decidedAt: Date?
 
-    /// Default time an item rests on the cooling shelf. Kaitlyn can change this.
-    static let defaultCoolingPeriod: TimeInterval = 3 * 24 * 60 * 60
+    /// Default time an item rests on the cooling shelf.
+    /// Kaitlyn: comes from the user's setting (ShelfSettings.swift, 3 days unless changed).
+    static var defaultCoolingPeriod: TimeInterval { ShelfSettings.coolingPeriod }
 
     init(
         title: String,

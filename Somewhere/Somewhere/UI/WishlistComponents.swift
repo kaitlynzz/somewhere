@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import UIKit
 
 // MARK: - Polaroid card (grid cell)
@@ -92,6 +93,9 @@ final class ThumbnailCache: @unchecked Sendable {
 
     @MainActor
     func image(for item: SavedItem, maxPixel: CGFloat) async -> UIImage? {
+        // Kaitlyn: reading a deleted item crashes SwiftData (happened when items were
+        // deleted while their photo was still loading).
+        guard !item.isDeleted, item.modelContext != nil else { return nil }
         let key = "\(item.id.uuidString)-\(Int(maxPixel))" as NSString
         if let cached = cache.object(forKey: key) { return cached }
         guard let data = item.imageData else { return nil }   // read model on main actor
