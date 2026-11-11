@@ -6,20 +6,84 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		73BCABB630A500C3006BC322 /* SomewhereShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 73BCABAC30A500C2006BC322 /* SomewhereShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		73BCABB430A500C3006BC322 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 73BCABAB30A500C2006BC322;
+			remoteInfo = SomewhereShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		73BCABB730A500C3006BC322 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				73BCABB630A500C3006BC322 /* SomewhereShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* Somewhere.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Somewhere.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		73BCABAC30A500C2006BC322 /* SomewhereShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SomewhereShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		73BCABBA30A500C3006BC322 /* Exceptions for "SomewhereShare" folder in "SomewhereShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 73BCABAB30A500C2006BC322 /* SomewhereShare */;
+		};
+		73BCABCA30A5029E006BC322 /* Exceptions for "Somewhere" folder in "SomewhereShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model/SavedItem.swift,
+				Model/SharedStore.swift,
+				Model/WishlistEnums.swift,
+				Model/WishlistSearch.swift,
+				UI/Theme.swift,
+			);
+			target = 73BCABAB30A500C2006BC322 /* SomewhereShare */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* Somewhere */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				73BCABCA30A5029E006BC322 /* Exceptions for "Somewhere" folder in "SomewhereShare" target */,
+			);
 			path = Somewhere;
+			sourceTree = "<group>";
+		};
+		73BCABAD30A500C2006BC322 /* SomewhereShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				73BCABBA30A500C3006BC322 /* Exceptions for "SomewhereShare" folder in "SomewhereShare" target */,
+			);
+			path = SomewhereShare;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000130000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		73BCABA930A500C2006BC322 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -31,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* Somewhere */,
+				73BCABAD30A500C2006BC322 /* SomewhereShare */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000120 /* Somewhere.app */,
+				73BCABAC30A500C2006BC322 /* SomewhereShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,13 +114,17 @@
 /* Begin PBXNativeTarget section */
 		000000000000000100000000 /* Somewhere */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 000000000000000110000000 /* Build configuration list for PBXNativeTarget Somewhere */;
+			buildConfigurationList = 000000000000000110000000 /* Build configuration list for PBXNativeTarget "Somewhere" */;
 			buildPhases = (
 				000000000000000120000000 /* Sources */,
 				000000000000000130000000 /* Frameworks */,
 				000000000000000140000000 /* Resources */,
+				73BCABB730A500C3006BC322 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				73BCABB530A500C3006BC322 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000010 /* Somewhere */,
@@ -64,6 +134,24 @@
 			productReference = 000000000000000000000120 /* Somewhere.app */;
 			productType = "com.apple.product-type.application";
 		};
+		73BCABAB30A500C2006BC322 /* SomewhereShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73BCABBB30A500C3006BC322 /* Build configuration list for PBXNativeTarget "SomewhereShare" */;
+			buildPhases = (
+				73BCABA830A500C2006BC322 /* Sources */,
+				73BCABA930A500C2006BC322 /* Frameworks */,
+				73BCABAA30A500C2006BC322 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				73BCABAD30A500C2006BC322 /* SomewhereShare */,
+			);
+			name = SomewhereShare;
+			productName = SomewhereShare;
+			productReference = 73BCABAC30A500C2006BC322 /* SomewhereShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -71,15 +159,19 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2630;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2710;
 				TargetAttributes = {
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					73BCABAB30A500C2006BC322 = {
+						CreatedOnToolsVersion = 26.6;
+						LastSwiftMigration = 2660;
+					};
 				};
 			};
-			buildConfigurationList = 000000000000000010000000 /* Build configuration list for PBXProject Somewhere */;
+			buildConfigurationList = 000000000000000010000000 /* Build configuration list for PBXProject "Somewhere" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -94,12 +186,18 @@
 			projectRoot = "";
 			targets = (
 				000000000000000100000000 /* Somewhere */,
+				73BCABAB30A500C2006BC322 /* SomewhereShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		000000000000000140000000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		73BCABAA30A500C2006BC322 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -112,10 +210,23 @@
 			files = (
 			);
 		};
+		73BCABA830A500C2006BC322 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		73BCABB530A500C3006BC322 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 73BCABAB30A500C2006BC322 /* SomewhereShare */;
+			targetProxy = 73BCABB430A500C3006BC322 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		000000000000000011000000 /* Debug configuration for PBXProject Somewhere */ = {
+		000000000000000011000000 /* Debug configuration for PBXProject "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -186,7 +297,7 @@
 			};
 			name = Debug;
 		};
-		000000000000000012000000 /* Release configuration for PBXProject Somewhere */ = {
+		000000000000000012000000 /* Release configuration for PBXProject "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -249,29 +360,33 @@
 			};
 			name = Release;
 		};
-		000000000000000111000000 /* Debug configuration for PBXNativeTarget Somewhere */ = {
+		000000000000000111000000 /* Debug configuration for PBXNativeTarget "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W3K365RSJG;
+				DEVELOPMENT_TEAM = V3TKGLRQG9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = somewhere;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_CFBundleDisplayName = somewhere;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yitongli.somewhere;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minasun.somewhere;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = iphoneos;
@@ -286,29 +401,33 @@
 			};
 			name = Debug;
 		};
-		000000000000000112000000 /* Release configuration for PBXNativeTarget Somewhere */ = {
+		000000000000000112000000 /* Release configuration for PBXNativeTarget "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = W3K365RSJG;
+				DEVELOPMENT_TEAM = V3TKGLRQG9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = somewhere;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_CFBundleDisplayName = somewhere;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yitongli.somewhere;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minasun.somewhere;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = iphoneos;
@@ -323,22 +442,96 @@
 			};
 			name = Release;
 		};
+		73BCABB830A500C3006BC322 /* Debug configuration for PBXNativeTarget "SomewhereShare" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SomewhereShare/SomewhereShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V3TKGLRQG9;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomewhereShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Somewhere;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minasun.somewhere.SomewhereShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		73BCABB930A500C3006BC322 /* Release configuration for PBXNativeTarget "SomewhereShare" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SomewhereShare/SomewhereShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V3TKGLRQG9;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SomewhereShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Somewhere;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minasun.somewhere.SomewhereShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		000000000000000010000000 /* Build configuration list for PBXProject Somewhere */ = {
+		000000000000000010000000 /* Build configuration list for PBXProject "Somewhere" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				000000000000000011000000 /* Debug configuration for PBXProject Somewhere */,
-				000000000000000012000000 /* Release configuration for PBXProject Somewhere */,
+				000000000000000011000000 /* Debug configuration for PBXProject "Somewhere" */,
+				000000000000000012000000 /* Release configuration for PBXProject "Somewhere" */,
 			);
 			defaultConfigurationName = Release;
 		};
-		000000000000000110000000 /* Build configuration list for PBXNativeTarget Somewhere */ = {
+		000000000000000110000000 /* Build configuration list for PBXNativeTarget "Somewhere" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				000000000000000111000000 /* Debug configuration for PBXNativeTarget Somewhere */,
-				000000000000000112000000 /* Release configuration for PBXNativeTarget Somewhere */,
+				000000000000000111000000 /* Debug configuration for PBXNativeTarget "Somewhere" */,
+				000000000000000112000000 /* Release configuration for PBXNativeTarget "Somewhere" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		73BCABBB30A500C3006BC322 /* Build configuration list for PBXNativeTarget "SomewhereShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73BCABB830A500C3006BC322 /* Debug configuration for PBXNativeTarget "SomewhereShare" */,
+				73BCABB930A500C3006BC322 /* Release configuration for PBXNativeTarget "SomewhereShare" */,
 			);
 			defaultConfigurationName = Release;
 		};
