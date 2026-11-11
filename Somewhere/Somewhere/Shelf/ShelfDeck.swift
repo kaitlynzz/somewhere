@@ -3,7 +3,7 @@
 //  Somewhere — Cooling shelf (Kaitlyn)
 //
 //  The swipe cards: right = keep it, left = let go.
-//  Built on Muskaan's DesignSystem (SWChoiceButtonStyle, SWSticker, sw colours).
+//  Styled like Nicole's wishlist (Theme.swift): polaroid cards, handwritten captions.
 //
 
 import SwiftUI
@@ -91,6 +91,7 @@ struct ShelfDeck: View {
 // MARK: - Card
 
 /// "the perfect shoes have cooled for 3 days. still want it?"
+/// A big polaroid, like the wishlist's item page.
 struct ShelfCard: View {
     let item: SavedItem
     var dragX: CGFloat = 0
@@ -98,21 +99,35 @@ struct ShelfCard: View {
     var onLetGo: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             photo
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .swText(.headline)
-                    .lineLimit(2)
-                Text("has cooled for \(item.daysCooled) \(item.daysCooled == 1 ? "day" : "days").")
-                    .swText(.body, color: .swMuted)
+            Text(item.title)
+                .font(Theme.hand(24))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(2)
+
+            HStack(spacing: 8) {
+                SourceChip(source: item.sourceApp)
+                Text("cooled for \(item.daysCooled) \(item.daysCooled == 1 ? "day" : "days")")
+                    .font(Theme.body(14))
+                    .foregroundStyle(Theme.inkSoft)
+                Spacer(minLength: 0)
+                if let price = item.price, !price.isEmpty {
+                    Text(price)
+                        .font(Theme.body(14, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                }
             }
 
             if let note = item.note, !note.isEmpty {
-                Text("“\(note)”")
-                    .swText(.voice, color: .swMuted)
+                Text(note)
+                    .font(Theme.body(15))
+                    .foregroundStyle(Theme.ink)
                     .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+                    .background(Theme.yellow.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
             }
 
             if let url = item.voiceNoteURL {
@@ -120,53 +135,88 @@ struct ShelfCard: View {
             }
 
             Text("still want it?")
-                .font(.custom("Inter-SemiBoldItalic", size: 20))
-                .foregroundStyle(Color.swBlue)
+                .font(Theme.display(26))
+                .foregroundStyle(Theme.headlineGradient)
+                .padding(.top, 2)
 
             HStack(spacing: 10) {
-                Button("let go", action: onLetGo)
-                    .buttonStyle(SWChoiceButtonStyle(kind: .light))
-                Button("keep it", action: onKeep)
-                    .buttonStyle(SWChoiceButtonStyle(kind: .dark))
+                Button(action: onLetGo) {
+                    Text("let go")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(Theme.paper, in: Capsule())
+                        .overlay(Capsule().strokeBorder(Theme.ink.opacity(0.12)))
+                }
+                Button(action: onKeep) {
+                    Text("keep it")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(Theme.ink, in: Capsule())
+                }
             }
+            .buttonStyle(.plain)
         }
         .padding(12)
-        .background(Color.white, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.swLine, lineWidth: 1))
-        .shadow(color: .black.opacity(0.08), radius: 16, y: 6)
+        .padding(.bottom, 2)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
+        .shadow(color: .black.opacity(0.08), radius: 14, y: 8)
         .accessibilityElement(children: .contain)
     }
 
     private var photo: some View {
         Color.clear
-            .frame(maxWidth: .infinity, minHeight: 140, maxHeight: .infinity)
-            .overlay { ItemImageView(item: item, maxPixel: 900) }
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: 70, maxHeight: .infinity)
+            .overlay { ItemImageView(item: item, maxPixel: 1200) }
+            .clipShape(RoundedRectangle(cornerRadius: 3))
             .overlay(alignment: .topLeading) {
-                SWSticker(text: "from \(item.sourceApp.displayName)", color: .swStickerMint, tilt: -4)
-                    .padding(10)
+                ShelfTimeBadge(text: "ready", symbol: "hand.draw").padding(8)
             }
             .overlay(alignment: .topLeading) {
-                stamp("keep it", color: .swBlue, tilt: -12)
+                stamp("keep it", color: Theme.blue, tilt: -12)
                     .opacity(Double(max(0, min(1, dragX / 90))))
-                    .padding(18)
+                    .padding(20)
             }
             .overlay(alignment: .topTrailing) {
-                stamp("let go", color: .swInk, tilt: 12)
+                stamp("let go", color: Theme.pink, tilt: 12)
                     .opacity(Double(max(0, min(1, -dragX / 90))))
-                    .padding(18)
+                    .padding(20)
             }
     }
 
     private func stamp(_ text: String, color: Color, tilt: Double) -> some View {
         Text(text)
-            .font(.custom("Inter-ExtraBold", size: 26))
+            .font(Theme.display(28))
             .foregroundStyle(color)
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
-            .background(Color.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(color, lineWidth: 3))
+            .background(Theme.paper.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(color, lineWidth: 3))
             .rotationEffect(.degrees(tilt))
             .accessibilityHidden(true)
+    }
+}
+
+/// Same look as the wishlist's "cooling" / "decide" badge.
+struct ShelfTimeBadge: View {
+    let text: String
+    var symbol = "moon.zzz"
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: symbol)
+            Text(text)
+        }
+        .lineLimit(1)
+        .fixedSize()
+        .font(.system(size: 10, weight: .bold))
+        .foregroundStyle(Theme.blue)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(.ultraThinMaterial, in: Capsule())
+        .background(Theme.lavender.opacity(0.7), in: Capsule())
     }
 }

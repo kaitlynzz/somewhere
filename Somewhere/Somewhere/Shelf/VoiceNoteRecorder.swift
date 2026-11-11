@@ -166,19 +166,32 @@ struct VoiceNoteRecorderView: View {
                             ShelfVoiceNotes.remove(from: item, in: context)
                         }
                     }
-                    .font(.custom("Inter-SemiBold", size: 13))
-                    .foregroundStyle(Color.swMuted)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.inkSoft)
                 } else {
                     Button {
                         Task { await recorder.start(for: item) }
                     } label: {
-                        Label("record why you want it", systemImage: "mic.fill")
+                        HStack(spacing: 10) {
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 34, height: 34)
+                                .background(Theme.pink, in: Circle())
+                            Text("record a voice note")
+                                .font(Theme.body(15, weight: .medium))
+                                .foregroundStyle(Theme.ink)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(10)
+                        .background(Theme.pinkSoft.opacity(0.6), in: Capsule())
                     }
-                    .buttonStyle(SWChoiceButtonStyle(kind: .light))
+                    .buttonStyle(.plain)
                 }
                 if recorder.phase == .failed {
                     Text("couldn't start recording. try again?")
-                        .swText(.caption, color: .red)
+                        .font(.caption)
+                        .foregroundStyle(Theme.pink)
                 }
             }
         }
@@ -197,19 +210,19 @@ struct VoiceNoteRecorderView: View {
     private var recordingRow: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Color.red)
+                .fill(Theme.pink)
                 .frame(width: 10, height: 10)
                 .opacity(0.4 + recorder.level * 0.6)
 
             Text(Duration.seconds(recorder.elapsed), format: .time(pattern: .minuteSecond))
-                .font(.custom("Inter-Medium", size: 15).monospacedDigit())
-                .foregroundStyle(Color.swInk)
+                .font(.system(size: 15, weight: .medium).monospacedDigit())
+                .foregroundStyle(Theme.ink)
 
             // Level meter
             GeometryReader { geo in
-                Capsule().fill(Color.swLine)
+                Capsule().fill(Theme.pink.opacity(0.2))
                     .overlay(alignment: .leading) {
-                        Capsule().fill(Color.swBlue)
+                        Capsule().fill(Theme.pink)
                             .frame(width: max(6, geo.size.width * recorder.level))
                     }
             }
@@ -217,35 +230,35 @@ struct VoiceNoteRecorderView: View {
             .animation(.linear(duration: 0.1), value: recorder.level)
 
             Button("cancel") { recorder.cancel() }
-                .font(.custom("Inter-SemiBold", size: 13))
-                .foregroundStyle(Color.swMuted)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.inkSoft)
 
             Button {
                 if let name = recorder.stop() { ShelfVoiceNotes.attach(name, to: item, in: context) }
             } label: {
                 Image(systemName: "stop.fill")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.swPaper)
+                    .foregroundStyle(.white)
                     .frame(width: 34, height: 34)
-                    .background(Color.swInk, in: Circle())
+                    .background(Theme.pink, in: Circle())
             }
             .accessibilityLabel("Stop recording")
         }
         .padding(.horizontal, 14)
-        .frame(height: 52)
-        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+        .frame(height: 54)
+        .background(Theme.pinkSoft.opacity(0.6), in: Capsule())
     }
 
     private var deniedRow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("microphone is off for somewhere.")
-                .swText(.bodyStrong)
+            Text("microphone is off for somewhere")
+                .font(Theme.body(15, weight: .medium))
+                .foregroundStyle(Theme.ink)
             Button("turn it on in Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
             }
-            .font(.custom("Inter-SemiBold", size: 14))
-            .foregroundStyle(Color.swBlue)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Theme.blue)
         }
     }
 }

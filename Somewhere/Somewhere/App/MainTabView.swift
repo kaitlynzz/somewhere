@@ -51,7 +51,7 @@ struct MainTabView: View {
                 .tag(AppTab.shelf)
                 .badge(readyCount)
         }
-        .tint(.swBlue)
+        .tint(Theme.blue)
         #if DEBUG
         .task { ShelfDebug.handleLaunchArguments(in: context) }
         #endif

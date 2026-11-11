@@ -6,7 +6,9 @@
 //  • top: swipe cards for saves whose cooling period is over
 //  • bottom: the "still cooling" shelf, with time left on each save
 //  • tap a cooling save to add a note / voice note on why you wanted it
-//  • gear: change the waiting period and turn on reminders
+//  • toolbar: change the waiting period and turn on reminders
+//
+//  Styled like Nicole's wishlist (Theme.swift) so the two tabs match.
 //
 
 import SwiftUI
@@ -29,38 +31,41 @@ struct ShelfView: View {
     @State private var reminderStatus: UNAuthorizationStatus = .authorized   // no prompt flash on load
 
     var body: some View {
-        // Re-checks every minute so cards appear the moment they're ready.
-        TimelineView(.periodic(from: .now, by: 60)) { timeline in
-            let now = timeline.date
-            let ready = cooling.filter { $0.shelfReadyAt <= now }
-            let waiting = cooling.filter { $0.shelfReadyAt > now }
+        Group {
+            // Re-checks every minute so cards appear the moment they're ready.
+            TimelineView(.periodic(from: .now, by: 60)) { timeline in
+                let now = timeline.date
+                let ready = cooling.filter { $0.shelfReadyAt <= now }
+                let waiting = cooling.filter { $0.shelfReadyAt > now }
 
-            VStack(spacing: 0) {
-                header(readyCount: ready.count)
+                VStack(spacing: 0) {
+                    header(readyCount: ready.count)
 
-                if ready.isEmpty {
-                    emptyState(next: waiting.first, now: now)
-                        .frame(maxHeight: .infinity)
-                } else {
-                    ShelfDeck(items: ready, onDecide: decide)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 8)
-                        .padding(.bottom, 20)   // room for the cards stacked behind
-                        .frame(maxHeight: .infinity)
-                    swipeHint
-                }
+                    if ready.isEmpty {
+                        emptyState(next: waiting.first)
+                            .frame(maxHeight: .infinity)
+                    } else {
+                        ShelfDeck(items: ready, onDecide: decide)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 10)
+                            .padding(.bottom, 20)   // room for the cards stacked behind
+                            .frame(maxHeight: .infinity)
+                        swipeHint
+                    }
 
-                if reminderStatus == .notDetermined && !cooling.isEmpty {
-                    reminderPrompt
-                }
+                    if reminderStatus == .notDetermined && !cooling.isEmpty {
+                        reminderPrompt
+                    }
 
-                if !waiting.isEmpty {
-                    coolingShelf(waiting, now: now)
+                    if !waiting.isEmpty {
+                        coolingShelf(waiting, now: now)
+                    }
                 }
             }
+            .background(Theme.cream.ignoresSafeArea())
+            .overlay(alignment: .bottom) { toastView }
         }
-        .background(Color.swPaper.ignoresSafeArea())
-        .overlay(alignment: .bottom) { toastView }
+        .tint(Theme.blue)
         .sensoryFeedback(trigger: toast) { _, new in
             new.map { $0.keep ? .success : .impact(weight: .light) }
         }
@@ -76,47 +81,54 @@ struct ShelfView: View {
         .task { reminderStatus = await ShelfNotifications.authorizationStatus() }
     }
 
-    // MARK: Header
+    // MARK: Header + toolbar
 
     private func header(readyCount: Int) -> some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("the cooling shelf.")
-                    .swText(.title)
-                Text(readyCount > 0
-                     ? "\(readyCount) \(readyCount == 1 ? "save has" : "saves have") cooled off."
-                     : "saves rest for \(coolingDays) \(coolingDays == 1 ? "day" : "days") before you decide.")
-                    .swText(.body, color: .swMuted)
-            }
-            Spacer(minLength: 12)
-
-            #if DEBUG
-            Menu {
-                Button("reset to demo items", systemImage: "sparkles") { ShelfDebug.resetToDemo(in: context) }
-                Button("add test saves", systemImage: "plus") { ShelfDebug.addTestItems(in: context) }
-                Button("make everything ready now", systemImage: "forward.end") { ShelfDebug.makeAllReady(in: context) }
-            } label: {
-                Image(systemName: "ladybug")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.swMuted)
-                    .frame(width: 36, height: 36)
-            }
-            .accessibilityLabel("Debug tools")
-            #endif
-
-            Button { showSettings = true } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.swInk)
-                    .frame(width: 36, height: 36)
-                    .background(Color.white, in: Circle())
-                    .overlay(Circle().stroke(Color.swLine, lineWidth: 1))
-            }
-            .accessibilityLabel("Shelf settings")
+        VStack(alignment: .leading, spacing: 4) {
+            topButtons
+            Text("the cooling shelf")
+                .font(Theme.display(38))
+                .foregroundStyle(Theme.headlineGradient)
+            Text(readyCount > 0
+                 ? "\(readyCount) \(readyCount == 1 ? "thing has" : "things have") cooled off"
+                 : "things rest here for \(coolingDays) \(coolingDays == 1 ? "day" : "days") before you decide")
+                .font(Theme.body(14))
+                .foregroundStyle(Theme.inkSoft)
+                .contentTransition(.numericText())
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+    }
+
+    /// Top-right buttons, in the same frosted capsule as the wishlist's toolbar.
+    private var topButtons: some View {
+        HStack {
+            Spacer()
+            HStack(spacing: 18) {
+                #if DEBUG
+                Menu {
+                    Button("reset to demo items", systemImage: "sparkles") { ShelfDebug.resetToDemo(in: context) }
+                    Button("add test saves", systemImage: "plus") { ShelfDebug.addTestItems(in: context) }
+                    Button("make everything ready now", systemImage: "forward.end") { ShelfDebug.makeAllReady(in: context) }
+                } label: {
+                    Image(systemName: "ladybug")
+                }
+                .accessibilityLabel("Debug tools")
+                #endif
+                Button { showSettings = true } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("Shelf settings")
+            }
+            .font(.system(size: 18, weight: .medium))
+            .foregroundStyle(Theme.blue)
+            .padding(.horizontal, 14)
+            .frame(height: 44)
+            .background(.ultraThinMaterial, in: Capsule())
+            .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+        }
+        .padding(.bottom, 4)
     }
 
     private var swipeHint: some View {
@@ -125,31 +137,32 @@ struct ShelfView: View {
             Label { Text("keep it") } icon: { Image(systemName: "arrow.right") }
                 .labelStyle(TrailingIconLabelStyle())
         }
-        .font(.custom("Inter-Medium", size: 12))
-        .foregroundStyle(Color.swMuted.opacity(0.8))
-        .padding(.vertical, 12)
+        .font(Theme.body(12, weight: .medium))
+        .foregroundStyle(Theme.inkSoft.opacity(0.8))
+        .padding(.bottom, 12)
         .accessibilityHidden(true)
     }
 
     // MARK: Empty
 
-    private func emptyState(next: SavedItem?, now: Date) -> some View {
+    private func emptyState(next: SavedItem?) -> some View {
         VStack(spacing: 14) {
-            AsteriskMark(size: 34)
-                .frame(width: 72, height: 72)
-                .background(Color.swSky, in: Circle())
-
-            Text(next == nil ? "your shelf is empty." : "nothing to decide yet.")
-                .swText(.headline)
-
+            Image(systemName: next == nil ? "sparkles" : "moon.zzz")
+                .font(.system(size: 34, weight: .light))
+                .foregroundStyle(Theme.periwinkle)
+            Text(next == nil ? "nothing cooling yet" : "nothing to decide yet")
+                .font(Theme.display(22))
+                .foregroundStyle(Theme.headlineGradient)
+                .multilineTextAlignment(.center)
             Group {
                 if let next {
                     Text("next one's ready \(next.shelfReadyAt, format: .relative(presentation: .named)).")
                 } else {
-                    Text("new saves rest here for a few days,\nso impulse buys have time to fade.")
+                    Text("New saves rest here for a few days, so impulse buys have time to fade.")
                 }
             }
-            .swText(.body, color: .swMuted)
+            .font(Theme.body(14))
+            .foregroundStyle(Theme.inkSoft)
             .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 32)
@@ -160,10 +173,11 @@ struct ShelfView: View {
     private var reminderPrompt: some View {
         HStack(spacing: 12) {
             Image(systemName: "bell.badge")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color.swBlue)
-            Text("get a nudge when a save is ready.")
-                .swText(.bodyStrong)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Theme.pink)
+            Text("get a nudge when something's ready")
+                .font(Theme.body(14, weight: .medium))
+                .foregroundStyle(Theme.ink)
             Spacer(minLength: 8)
             Button("turn on") {
                 Task {
@@ -172,15 +186,16 @@ struct ShelfView: View {
                     await ShelfNotifications.sync(cooling.map(ShelfNotifications.Reminder.init))
                 }
             }
-            .font(.custom("Inter-SemiBold", size: 14))
-            .foregroundStyle(Color.swPaper)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .frame(height: 34)
-            .background(Color.swInk, in: Capsule())
+            .background(Theme.ink, in: Capsule())
         }
         .padding(14)
-        .background(Color.swBlue50, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .padding(.horizontal, 24)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+        .padding(.horizontal, 20)
         .padding(.bottom, 12)
     }
 
@@ -190,15 +205,17 @@ struct ShelfView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Text("STILL COOLING")
-                    .swText(.label, color: .swMuted)
+                    .font(Theme.label)
+                    .foregroundStyle(Theme.blue)
                 Text("\(items.count)")
-                    .swText(.label, color: .swBlue)
+                    .font(Theme.label)
+                    .foregroundStyle(Theme.inkSoft)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 14)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 16) {
+                HStack(alignment: .top, spacing: 14) {
                     ForEach(items) { item in
                         Button { selected = item } label: {
                             CoolingTile(item: item, now: now)
@@ -206,13 +223,12 @@ struct ShelfView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 14)
-                .padding(.bottom, 16)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .padding(.bottom, 12)
             }
         }
-        .background(Color.swSurfaceSunk)
-        .overlay(alignment: .top) { Rectangle().fill(Color.swLine).frame(height: 1) }
+        .background(Theme.lavender.opacity(0.7))
     }
 
     // MARK: Decide + undo
@@ -233,17 +249,17 @@ struct ShelfView: View {
         if let toast {
             HStack(spacing: 14) {
                 Text(toast.keep ? "kept. good decision." : "let go. saved money.")
-                    .font(.custom("Inter-SemiBold", size: 15))
-                    .foregroundStyle(Color.swPaper)
+                    .font(Theme.body(15, weight: .semibold))
+                    .foregroundStyle(.white)
                 Spacer(minLength: 8)
                 Button("undo") { undo(toast) }
-                    .font(.custom("Inter-Bold", size: 15))
-                    .foregroundStyle(Color.swSky)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Theme.yellow)
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 20)
             .frame(height: 52)
-            .background(Color.swInk, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .padding(.horizontal, 24)
+            .background(Theme.ink, in: Capsule())
+            .padding(.horizontal, 20)
             .padding(.bottom, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .task(id: toast.id) {
@@ -264,7 +280,7 @@ struct DecisionToast: Equatable {
 
 // MARK: - Cooling tile
 
-/// A small polaroid on the "still cooling" shelf, with a "2 days left" sticker.
+/// A small polaroid on the "still cooling" shelf — same look as a wishlist card.
 struct CoolingTile: View {
     let item: SavedItem
     let now: Date
@@ -272,34 +288,34 @@ struct CoolingTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Color.clear
-                .frame(width: 104, height: 104)
-                .overlay { ItemImageView(item: item, maxPixel: 320) }
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .frame(width: 96, height: 96)
+                .overlay { ItemImageView(item: item, maxPixel: 500) }
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .overlay(alignment: .topLeading) {
+                    ShelfTimeBadge(text: timeLeft).padding(5)
+                }
                 .overlay(alignment: .bottomTrailing) {
                     if item.voiceNoteURL != nil {
                         Image(systemName: "waveform")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Color.swInk)
+                            .foregroundStyle(.white)
                             .padding(5)
-                            .background(Color.swStickerPink, in: Circle())
+                            .background(Theme.pink, in: Circle())
                             .padding(5)
                     }
                 }
 
             Text(item.title)
-                .font(.custom("Inter-Medium", size: 12))
-                .foregroundStyle(Color.swInk)
+                .font(Theme.hand(14))
+                .foregroundStyle(Theme.ink)
                 .lineLimit(1)
-                .frame(width: 104, alignment: .leading)
+                .frame(width: 96, alignment: .leading)
         }
         .padding(7)
-        .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 3)
+        .padding(.bottom, 2)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
+        .shadow(color: .black.opacity(0.07), radius: 10, y: 5)
         .rotationEffect(.degrees(item.tiltDegrees))
-        .overlay(alignment: .topTrailing) {
-            SWSticker(text: timeLeft, color: .swStickerButter, tilt: 6)
-                .offset(x: 10, y: -10)
-        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(timeLeft)")
         .accessibilityHint("Add a note on why you want it")
@@ -316,9 +332,29 @@ struct CoolingTile: View {
     }
 }
 
+// MARK: - Section card (same look as the wishlist's item page)
+
+struct ShelfSectionCard<Content: View>: View {
+    let label: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(label)
+                .font(Theme.label)
+                .foregroundStyle(Theme.blue)
+            content
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+    }
+}
+
 // MARK: - Cooling item sheet
 
-/// "why did you want it?" — note + voice note for a save that's still cooling.
+/// "why I wanted it" — note + voice note for a save that's still cooling.
 struct CoolingItemSheet: View {
     let item: SavedItem
     var onLetGo: () -> Void
@@ -328,52 +364,69 @@ struct CoolingItemSheet: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Color.clear
-                    .frame(height: 260)
-                    .frame(maxWidth: .infinity)
-                    .overlay { ItemImageView(item: item, maxPixel: 900) }
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 20) {
+                // Polaroid
+                VStack(spacing: 12) {
+                    ItemImageView(item: item, maxPixel: 1200)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 260)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
                     Text(item.title)
-                        .swText(.title)
-                        .lineLimit(3)
-                    HStack(spacing: 8) {
-                        SWSticker(text: "cooling", color: .swStickerButter, tilt: -3)
+                        .font(Theme.hand(20))
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                        .padding(.bottom, 6)
+                }
+                .padding(12)
+                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
+                .shadow(color: .black.opacity(0.08), radius: 14, y: 8)
+                .rotationEffect(.degrees(item.tiltDegrees))
+                .padding(.horizontal, 6)
+
+                ShelfSectionCard(label: "THE COOLING SHELF") {
+                    HStack(spacing: 10) {
+                        ShelfTimeBadge(text: "cooling")
                         Text("ready \(item.shelfReadyAt, format: .dateTime.weekday(.wide).hour().minute())")
-                            .swText(.caption, color: .swMuted)
+                            .font(Theme.body(15, weight: .medium))
+                            .foregroundStyle(Theme.ink)
+                    }
+
+                    Divider().overlay(Theme.ink.opacity(0.05))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("why I wanted it")
+                            .font(Theme.hand(17))
+                            .foregroundStyle(Theme.pink)
+
+                        TextField("wore it to… / perfect for… / because…", text: noteBinding, axis: .vertical)
+                            .font(Theme.body(15))
+                            .lineLimit(2...6)
+                            .padding(12)
+                            .background(Theme.yellow.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
+
+                        VoiceNoteRecorderView(item: item)
                     }
                 }
 
-                Rectangle().fill(Color.swLine).frame(height: 1)
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("WHY DID YOU WANT IT?")
-                        .swText(.label, color: .swMuted)
-
-                    TextField("a quick note for future you…", text: noteBinding, axis: .vertical)
-                        .font(.custom("Inter-Regular", size: 16))
-                        .lineLimit(2...5)
-                        .padding(14)
-                        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
-
-                    VoiceNoteRecorderView(item: item)
-                }
-
-                Rectangle().fill(Color.swLine).frame(height: 1)
-
-                Button("let go now") {
+                Button {
                     dismiss()
                     onLetGo()
+                } label: {
+                    Text("let go now")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Theme.paper, in: Capsule())
+                        .overlay(Capsule().strokeBorder(Theme.ink.opacity(0.12)))
                 }
-                .buttonStyle(SWChoiceButtonStyle(kind: .light))
+                .buttonStyle(.plain)
             }
-            .padding(24)
+            .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.swPaper.ignoresSafeArea())
+        .background(Theme.cream.ignoresSafeArea())
         .presentationDragIndicator(.visible)
         .onDisappear { try? context.save() }
     }
@@ -405,52 +458,63 @@ struct ShelfSettingsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("waiting period.")
-                    .swText(.title)
-                Text("how long new saves rest before you decide.")
-                    .swText(.body, color: .swMuted)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("waiting period")
+                    .font(Theme.display(30))
+                    .foregroundStyle(Theme.headlineGradient)
+                Text("how long new saves rest before you decide")
+                    .font(Theme.body(14))
+                    .foregroundStyle(Theme.inkSoft)
             }
 
+            // Chips, like the wishlist's category filters
             HStack(spacing: 8) {
                 ForEach(options, id: \.self) { option in
+                    let isOn = option == days
                     Button { days = option } label: {
-                        Text("\(option)d")
-                            .font(.custom("Inter-SemiBold", size: 15))
-                            .foregroundStyle(option == days ? Color.swPaper : Color.swInk)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(option == days ? Color.swInk : Color.white,
-                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(option == days ? Color.clear : Color.swLine, lineWidth: 1))
+                        Text("\(option) \(option == 1 ? "day" : "days")")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(isOn ? .white : Theme.ink)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(isOn ? AnyShapeStyle(Theme.pink) : AnyShapeStyle(Theme.paper), in: Capsule())
+                            .overlay(Capsule().strokeBorder(Theme.ink.opacity(isOn ? 0 : 0.08)))
                     }
-                    .accessibilityLabel("\(option) \(option == 1 ? "day" : "days")")
-                    .accessibilityAddTraits(option == days ? .isSelected : [])
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
                 }
             }
+            .sensoryFeedback(.selection, trigger: days)
 
             Text("changes apply to everything still cooling, too.")
-                .swText(.caption, color: .swMuted)
+                .font(.caption)
+                .foregroundStyle(Theme.inkSoft)
 
-            Rectangle().fill(Color.swLine).frame(height: 1)
-
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("reminders").swText(.bodyStrong)
-                    Text(reminderText).swText(.caption, color: .swMuted)
+            ShelfSectionCard(label: "REMINDERS") {
+                HStack {
+                    Text(reminderText)
+                        .font(Theme.body(15))
+                        .foregroundStyle(Theme.ink)
+                    Spacer()
+                    reminderButton
                 }
-                Spacer()
-                reminderButton
             }
 
             Spacer(minLength: 0)
 
-            Button("done") { dismiss() }
-                .buttonStyle(SWPrimaryButtonStyle())
+            Button { dismiss() } label: {
+                Text("done")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Theme.ink, in: Capsule())
+            }
+            .buttonStyle(.plain)
         }
-        .padding(24)
-        .background(Color.swPaper.ignoresSafeArea())
+        .padding(20)
+        .padding(.top, 8)
+        .background(Theme.cream.ignoresSafeArea())
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .task { reminderStatus = await ShelfNotifications.authorizationStatus() }
@@ -463,9 +527,9 @@ struct ShelfSettingsSheet: View {
 
     private var reminderText: String {
         switch reminderStatus {
-        case .authorized, .provisional, .ephemeral: "on. we'll nudge you when a save is ready."
-        case .denied: "off. turn them on in Settings."
-        default: "off."
+        case .authorized, .provisional, .ephemeral: "on — we'll nudge you when something's ready"
+        case .denied: "off — turn them on in Settings"
+        default: "off"
         }
     }
 
@@ -479,16 +543,16 @@ struct ShelfSettingsSheet: View {
                     reminderStatus = await ShelfNotifications.authorizationStatus()
                 }
             }
-            .font(.custom("Inter-SemiBold", size: 14))
-            .foregroundStyle(Color.swBlue)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Theme.blue)
         case .denied:
             Button("Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
             }
-            .font(.custom("Inter-SemiBold", size: 14))
-            .foregroundStyle(Color.swBlue)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Theme.blue)
         default:
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.swBlue)
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.green)
         }
     }
 }
