@@ -241,7 +241,7 @@ struct SaveSheetView: View {
         switch model.saveState {
         case .saving: "saving…"
         case .saved:  "saved"
-        default:      "save to wishlist"
+        default:      "save to shelf"
         }
     }
 
