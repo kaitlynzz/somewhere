@@ -363,6 +363,7 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Somewhere/Somewhere.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = V3TKGLRQG9;
@@ -404,6 +405,7 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "Somewhere" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Somewhere/Somewhere.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = V3TKGLRQG9;
