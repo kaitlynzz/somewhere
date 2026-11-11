@@ -17,7 +17,8 @@ struct WishlistQuery: Equatable {
     var source: SourceApp? = nil
     var sort: WishlistSort = .newest
     /// Show items that are still resting on the cooling shelf.
-    var includeCooling: Bool = true
+    /// Off by default: new saves live on the Shelf until you keep them.
+    var includeCooling: Bool = false
 
     var isFiltering: Bool {
         !text.trimmingCharacters(in: .whitespaces).isEmpty || category != nil || source != nil
