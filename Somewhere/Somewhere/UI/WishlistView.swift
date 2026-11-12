@@ -51,7 +51,7 @@ struct WishlistView: View {
                 .pickerStyle(.menu)
                 Toggle("Show cooling shelf items", isOn: $query.includeCooling)
             } label: {
-                Image(systemName: query.source != nil || !query.includeCooling
+                Image(systemName: query.source != nil || query.includeCooling
                       ? "line.3.horizontal.decrease.circle.fill"
                       : "line.3.horizontal.decrease.circle")
             }
@@ -78,19 +78,27 @@ private struct WishlistResults: View {
     ]
 
     var body: some View {
+        // Cooling items live on the Shelf; only show them here if the toggle is on.
+        let shelved = items.filter { query.includeCooling || !$0.isCooling }
+        let coolingCount = items.count - shelved.count
         let visible = WishlistSearch.filter(items, query: query)
 
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                header(total: items.count, showing: visible.count)
+                header(total: shelved.count, showing: visible.count)
                     .padding(.horizontal, 20)
 
-                if !items.isEmpty {
-                    CategoryChips(selection: $query.category,
-                                  counts: WishlistSearch.categoryCounts(items))
+                if coolingCount > 0 {
+                    coolingHint(coolingCount)
+                        .padding(.horizontal, 20)
                 }
 
-                if items.isEmpty {
+                if !shelved.isEmpty {
+                    CategoryChips(selection: $query.category,
+                                  counts: WishlistSearch.categoryCounts(shelved))
+                }
+
+                if shelved.isEmpty {
                     EmptyWishlistView(kind: .nothingSaved)
                 } else if visible.isEmpty {
                     EmptyWishlistView(kind: .noResults(query.text))
@@ -143,6 +151,18 @@ private struct WishlistResults: View {
                 .foregroundStyle(Theme.inkSoft)
                 .contentTransition(.numericText())
         }
+    }
+
+    /// "2 new saves are cooling on the shelf" — so it's clear where new saves went.
+    private func coolingHint(_ count: Int) -> some View {
+        Label(count == 1 ? "1 new save is cooling on the shelf"
+                         : "\(count) new saves are cooling on the shelf",
+              systemImage: "moon.zzz")
+            .font(Theme.body(13, weight: .medium))
+            .foregroundStyle(Theme.blue)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(Theme.lavender, in: Capsule())
     }
 
     private func subtitle(total: Int, showing: Int) -> String {
