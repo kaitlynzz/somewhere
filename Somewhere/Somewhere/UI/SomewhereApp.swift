@@ -16,7 +16,7 @@ struct SomewhereApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()   // was WishlistView(); now wishlist + shelf tabs
+            RootView()   // onboarding first, then wishlist + shelf tabs
                 #if DEBUG
                 .task { seedSampleItemsOnce() }
                 #endif

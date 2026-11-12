@@ -111,6 +111,9 @@ struct ShelfView: View {
                     Button("reset to demo items", systemImage: "sparkles") { ShelfDebug.resetToDemo(in: context) }
                     Button("add test saves", systemImage: "plus") { ShelfDebug.addTestItems(in: context) }
                     Button("make everything ready now", systemImage: "forward.end") { ShelfDebug.makeAllReady(in: context) }
+                    Button("replay onboarding", systemImage: "arrow.counterclockwise") {
+                        UserDefaults.standard.set(false, forKey: "somewhere.isLoggedIn")
+                    }
                 } label: {
                     Image(systemName: "ladybug")
                 }
