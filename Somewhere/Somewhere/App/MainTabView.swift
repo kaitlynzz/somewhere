@@ -11,6 +11,8 @@ import SwiftData
 
 enum AppTab: Hashable {
     case wishlist
+    /// Karan: the in-app "+" (Add/AddItemView.swift).
+    case add
     case shelf
 }
 
@@ -45,6 +47,11 @@ struct MainTabView: View {
             WishlistView()
                 .tabItem { Label("wishlist", systemImage: "square.grid.2x2") }
                 .tag(AppTab.wishlist)
+
+            // Karan: add something by link, without leaving the app.
+            AddItemView()
+                .tabItem { Label("add", systemImage: "plus.circle") }
+                .tag(AppTab.add)
 
             ShelfView()
                 .tabItem { Label("shelf", systemImage: "hourglass") }
