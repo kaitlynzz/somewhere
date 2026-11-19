@@ -85,6 +85,7 @@ enum SavedItemStore {
         title: String,
         image: UIImage? = nil,
         link: URL? = nil,
+        pageDescription: String? = nil,
         source: SourceApp,
         category: ItemCategory? = nil,
         brand: String? = nil,
@@ -97,7 +98,10 @@ enum SavedItemStore {
         in context: ModelContext
     ) throws -> SavedItem {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        // What it is ("shirt", "sneakers"); Vision fills it in later if the words can't tell.
+        let kind = ItemKind.detect(title: cleanTitle, description: pageDescription, recognizedText: recognizedText)
         let resolvedCategory = category
+            ?? kind?.category
             ?? ItemCategory.guess(from: [cleanTitle, brand, recognizedText].compactMap { $0 }.joined(separator: " "))
 
         let item = SavedItem(
@@ -114,6 +118,8 @@ enum SavedItemStore {
             colorName: colorName?.lowercased(),
             colorHex: colorHex
         )
+        item.pageDescription = pageDescription
+        item.itemType = kind?.name
         context.insert(item)
         try context.save()
         return item

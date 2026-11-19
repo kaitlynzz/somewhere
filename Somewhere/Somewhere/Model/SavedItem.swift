@@ -28,6 +28,12 @@ final class SavedItem {
 
     /// Product / post link, if the save came from a URL.
     var linkURLString: String?
+    /// The product page's own description (og:description), if the save came from a link.
+    var pageDescription: String?
+
+    /// What it is, e.g. "shirt", "jeans", "sneakers" — an ItemKind name.
+    /// More specific than `category`; see ItemKind.swift.
+    var itemType: String?
 
     // MARK: Where it came from (the "context")
     var sourceAppRaw: String = SourceApp.other.rawValue

@@ -179,6 +179,13 @@ struct ItemDetailView: View {
                 .tint(Theme.ink)
             }
 
+            if let type = item.itemType {
+                row("what it is") {   // ItemKind: more specific than the category
+                    Text(type)
+                        .font(Theme.body(15))
+                }
+            }
+
             if item.colorName != nil || item.colorHex != nil {
                 row("colour") {
                     HStack(spacing: 8) {

@@ -148,6 +148,7 @@ final class AddItemModel {
                 title: cleanTitle,
                 image: previewImage,
                 link: parsedLink,
+                pageDescription: metadata?.description,
                 source: source,
                 category: categoryOverride,
                 brand: metadata?.brand,

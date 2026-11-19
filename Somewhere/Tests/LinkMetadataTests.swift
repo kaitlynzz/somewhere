@@ -64,6 +64,18 @@ final class LinkMetadataTests: XCTestCase {
         XCTAssertFalse(meta.isEmpty)
     }
 
+    func testReadsThePageDescription() {
+        let html = """
+        <html><head>
+        <meta property="og:title" content="Zara long-sleeves">
+        <meta property="og:description" content="Relaxed  long-sleeve shirt in cotton &amp; linen.">
+        <meta name="description" content="Shop the new collection">
+        </head></html>
+        """
+        let meta = LinkMetadataParser.parse(html: html)
+        XCTAssertEqual(meta.description, "Relaxed long-sleeve shirt in cotton & linen.")   // og: wins, cleaned up
+    }
+
     /// "Ribbed Tank Top | ZARA" is the page's title, but the item is a tank top.
     func testStripsTheSiteNameFromTheTitle() {
         let meta = LinkMetadataParser.parse(html: openGraphPage)

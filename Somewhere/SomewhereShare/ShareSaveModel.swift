@@ -223,6 +223,7 @@ final class ShareSaveModel {
                 title: title,
                 image: image,
                 link: parsedLink,
+                pageDescription: linkMetadata?.description,
                 source: source,
                 // Karan: brand and price come from the shared page's tags.
                 // SavedItemStore already accepted them and WishlistSearch

@@ -19,7 +19,8 @@ import SwiftData
 @MainActor
 enum VisualIndexer {
 
-    static let currentVersion = 1
+    /// 2: also works out what each item is (ItemKind).
+    static let currentVersion = 2
 
     private static var isRunning = false
     private static var needsAnotherPass = false
@@ -49,7 +50,9 @@ enum VisualIndexer {
             guard !item.isDeleted else { continue }
 
             guard let data = item.imageData else {
-                item.visualIndexVersion = version   // nothing to look at
+                // No picture, but the words may still say what it is.
+                applyKind(to: item, visionLabels: [])
+                item.visualIndexVersion = version
                 continue
             }
 
@@ -78,6 +81,8 @@ enum VisualIndexer {
             item.colorHex = color.hex
         }
 
+        applyKind(to: item, visionLabels: analysis.labels)
+
         // Only fill in "other" — never override a category someone picked.
         if item.category == .other, let category = VisualTagger.category(for: analysis.labels) {
             item.category = category
@@ -87,5 +92,17 @@ enum VisualIndexer {
         if analysis.classified {
             item.visualIndexVersion = version
         }
+    }
+
+    /// "shirt", "sneakers"… from the title, page description, Vision, then screenshot text.
+    private static func applyKind(to item: SavedItem, visionLabels: [VisualAnalysis.Label]) {
+        guard let kind = ItemKind.detect(
+            title: item.title,
+            description: item.pageDescription,
+            visionLabels: visionLabels.map { ($0.name, $0.confidence) },
+            recognizedText: item.recognizedText
+        ) else { return }
+        item.itemType = kind.name
+        if item.category == .other { item.category = kind.category }
     }
 }

@@ -103,4 +103,40 @@ final class WishlistSearchTests: XCTestCase {
         plaid.visualTags = "textile brown blue"
         XCTAssertEqual(WishlistSearch.filter([plaid], query: WishlistQuery(text: "blue shirt", includeCooling: true)).count, 1)
     }
+
+    // MARK: What it is (ItemKind)
+
+    func testItemKind_lastItemWordWins() {
+        XCTAssertEqual(ItemKind.detect(title: "Zara long-sleeves")?.name, "long-sleeve top")
+        XCTAssertEqual(ItemKind.detect(title: "Poplin shirt dress")?.name, "dress")
+        XCTAssertEqual(ItemKind.detect(title: "Oversized denim jacket")?.name, "jacket")
+        XCTAssertEqual(ItemKind.detect(title: "Canvas tote bag")?.name, "tote bag")
+        XCTAssertEqual(ItemKind.detect(title: "Ribbed Tank Top")?.name, "tank top")
+        XCTAssertEqual(ItemKind.detect(title: "Speedcat OG")?.name, nil)
+        // Title says nothing → the page description does.
+        XCTAssertEqual(ItemKind.detect(title: "The Lou", description: "Relaxed cotton shirt with a boxy fit.")?.name,
+                       "shirt")
+        // Nothing in the words → Vision.
+        XCTAssertEqual(ItemKind.detect(title: "Speedcat OG", visionLabels: [("sneaker", 0.8)])?.name, "sneakers")
+    }
+
+    /// The point of ItemKind: "shirt" shouldn't find jeans just because both are clothes,
+    /// or because the jeans' description mentions a shirt.
+    func testItemKind_shirtDoesNotFindJeans() {
+        let top = item("Zara long-sleeves", category: .clothes, color: "blue")
+        top.itemType = "long-sleeve top"
+        let jeans = item("Straight leg", category: .clothes, color: "blue")
+        jeans.itemType = "jeans"
+        jeans.pageDescription = "Classic blue jeans. Pairs well with a white shirt."
+        let unknown = item("Mystery clothes", category: .clothes, color: "blue")   // no type yet → category still counts
+
+        let all = [top, jeans, unknown]
+        func titles(_ q: String) -> [String] {
+            WishlistSearch.filter(all, query: WishlistQuery(text: q, sort: .name, includeCooling: true)).map(\.title)
+        }
+        XCTAssertEqual(titles("blue shirt"), ["Mystery clothes", "Zara long-sleeves"])
+        XCTAssertEqual(titles("blue jeans"), ["Mystery clothes", "Straight leg"])
+        XCTAssertEqual(titles("blue clothes"), ["Mystery clothes", "Straight leg", "Zara long-sleeves"])
+        XCTAssertEqual(titles("classic"), ["Straight leg"])   // description words are searchable
+    }
 }

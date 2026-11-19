@@ -2,8 +2,8 @@
 //  LinkMetadata.swift
 //  Somewhere — Add (Karan)
 //
-//  Karan: what a product page tells us about itself — title, image, brand,
-//  price, site — read out of its Open Graph / meta tags.
+//  Karan: what a product page tells us about itself — title, description,
+//  image, brand, price, site — read out of its Open Graph / meta tags.
 //
 //  Pure Foundation and pure parsing: no networking, no UI, no side effects,
 //  so every rule in here is covered by LinkMetadataTests. The networking
@@ -17,13 +17,16 @@ import Foundation
 /// Everything we managed to learn about a link. Any field may be nil.
 struct LinkMetadata: Equatable, Sendable {
     var title: String?
+    /// The page's own summary, e.g. "Relaxed long-sleeve shirt in cotton poplin."
+    /// Says what the thing is when the title doesn't (ItemKind, search).
+    var description: String?
     var siteName: String?
     var brand: String?
     var price: String?
     var imageURL: URL?
 
     var isEmpty: Bool {
-        title == nil && siteName == nil && brand == nil && price == nil && imageURL == nil
+        title == nil && description == nil && siteName == nil && brand == nil && price == nil && imageURL == nil
     }
 }
 
@@ -31,6 +34,8 @@ enum LinkMetadataParser {
 
     /// Titles longer than this are product-page spam, not names.
     static let maxTitleLength = 140
+    /// Enough for a product summary; skips the size chart / returns policy.
+    static let maxDescriptionLength = 500
 
     // MARK: - Links
 
@@ -85,6 +90,11 @@ enum LinkMetadataParser {
             meta.title = meta.siteName.map { strippingSiteSuffix(from: raw, site: $0) } ?? raw
         }
 
+        meta.description = clean(
+            firstValue(tags, ["og:description", "twitter:description", "description"]),
+            maxLength: maxDescriptionLength
+        )
+
         if let image = firstValue(tags, [
             "og:image:secure_url", "og:image", "twitter:image", "twitter:image:src",
         ]) {
@@ -111,14 +121,14 @@ enum LinkMetadataParser {
     // MARK: - Tidying
 
     /// Decodes entities, collapses whitespace, trims, and caps the length.
-    static func clean(_ text: String?) -> String? {
+    static func clean(_ text: String?, maxLength: Int = maxTitleLength) -> String? {
         guard let text else { return nil }
         let collapsed = decodeEntities(text)
             .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !collapsed.isEmpty else { return nil }
-        return String(collapsed.prefix(maxTitleLength))
+        return String(collapsed.prefix(maxLength))
     }
 
     /// "Ribbed Tank | ZARA" + site "ZARA" → "Ribbed Tank".
