@@ -192,6 +192,17 @@ struct ItemDetailView: View {
                 }
             }
 
+            if let tags = item.visualTags, !tags.isEmpty {
+                // What Vision saw in the picture (VisualTagger) — the words search can use.
+                row("looks like") {
+                    Text(tags.split(separator: " ").prefix(4)
+                        .map { $0.replacingOccurrences(of: "_", with: " ") }
+                        .joined(separator: ", "))
+                        .font(Theme.body(15))
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+
             row("shelf") {
                 Text(shelfText)
                     .font(Theme.body(15))

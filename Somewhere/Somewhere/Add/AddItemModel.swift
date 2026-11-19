@@ -158,6 +158,7 @@ final class AddItemModel {
             // New saves start on the cooling shelf, so say where it went —
             // otherwise it looks like the save silently failed.
             saveState = .saved(title: item.title, coolingDays: ShelfSettings.coolingDays)
+            Task { await VisualIndexer.run(in: context) }   // tag the picture for search
         } catch {
             saveState = .failed(error.localizedDescription)
         }

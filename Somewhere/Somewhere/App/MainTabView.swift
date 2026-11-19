@@ -62,6 +62,8 @@ struct MainTabView: View {
         #if DEBUG
         .task { ShelfDebug.handleLaunchArguments(in: context) }
         #endif
+        // Tag saved pictures so "blue shirt" finds them (VisualIndexer.swift).
+        .task { await VisualIndexer.run(in: context) }
         .task(id: reminderKey) {
             await ShelfNotifications.sync(cooling.map(ShelfNotifications.Reminder.init))
         }
@@ -76,6 +78,8 @@ struct MainTabView: View {
             guard phase == .active else { return }
             now = Date()
             Task { await ShelfNotifications.sync(cooling.map(ShelfNotifications.Reminder.init)) }
+            // Picks up anything saved from the Share Extension while we were away.
+            Task { await VisualIndexer.run(in: context) }
         }
     }
 }

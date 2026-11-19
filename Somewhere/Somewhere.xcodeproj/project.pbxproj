@@ -50,6 +50,7 @@
 			membershipExceptions = (
 				Add/LinkMetadata.swift,
 				Add/LinkMetadataFetcher.swift,
+				Model/DominantColor.swift,
 				Model/SavedItem.swift,
 				Model/SharedStore.swift,
 				Model/ShelfSettings.swift,

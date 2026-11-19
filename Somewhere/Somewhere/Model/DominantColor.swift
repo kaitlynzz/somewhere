@@ -1,6 +1,6 @@
 //
 //  DominantColor.swift
-//  Somewhere — finds a screenshot's main colour so "blue bag" searches work.
+//  Somewhere — finds a picture's main colour so "blue bag" searches work.
 //
 //  Fills SavedItem.colorName / colorHex. Names match the families
 //  WishlistSearch.colorSynonyms maps to: red, orange, yellow, green, blue,
@@ -10,13 +10,14 @@
 //  the edges) and picks the most common *colourful* hue. If the picture is
 //  basically neutral, it reports black / white / gray instead.
 //
-//  Extension target only.
+//  Both targets: the Share Extension runs it on screenshots, and the app's
+//  VisualIndexer runs it on every other saved picture (e.g. link saves).
 //
 
 import CoreGraphics
 import Foundation
 
-enum DominantColor {
+nonisolated enum DominantColor {
 
     struct Result: Sendable {
         let name: String
@@ -37,10 +38,50 @@ enum DominantColor {
     }
 
     nonisolated static func find(in image: CGImage) -> Result? {
-        // Shrink to 48×48 — plenty to judge colour, and cheap.
+        guard let pixels = centrePixels(of: image) else { return nil }
+
+        var hueBuckets = [Bucket](repeating: Bucket(), count: 12)   // 30° each
+        var everything = Bucket()
+
+        for (r, g, b) in pixels {
+            let (hue, saturation, value) = hsv(r, g, b)
+            everything.add(r, g, b)
+            if saturation > 0.25, value > 0.2 {
+                hueBuckets[min(Int(hue / 30), 11)].add(r, g, b)
+            }
+        }
+        guard everything.count > 0, let best = hueBuckets.max(by: { $0.count < $1.count }) else { return nil }
+
+        // A colour needs ~10% of the middle of the picture to count; otherwise call it neutral.
+        let isColourful = Double(best.count) / Double(everything.count) >= 0.10
+        let (r, g, b) = (isColourful ? best : everything).average
+        return Result(name: name(r, g, b), hex: hex(r, g, b))
+    }
+
+    /// Every *colourful* family covering at least `minShare` of the middle of
+    /// the picture, biggest first — e.g. ["blue", "brown"] for a blue-and-tan
+    /// plaid shirt, where `find` can only report one. Neutrals (white, gray,
+    /// black) are left out because they're usually the background.
+    nonisolated static func colourfulFamilies(in image: CGImage, minShare: Double = 0.15) -> [String] {
+        guard let pixels = centrePixels(of: image), !pixels.isEmpty else { return [] }
+        var counts: [String: Int] = [:]
+        for (r, g, b) in pixels {
+            counts[name(r, g, b), default: 0] += 1
+        }
+        let neutrals: Set<String> = ["white", "gray", "black"]
+        let threshold = Double(pixels.count) * minShare
+        return counts
+            .filter { !neutrals.contains($0.key) && Double($0.value) >= threshold }
+            .sorted { $0.value > $1.value }
+            .map(\.key)
+    }
+
+    /// RGB (0…1) of a 48×48 shrink of the picture, minus a 15% border
+    /// (screenshots have app chrome around the edges).
+    private nonisolated static func centrePixels(of image: CGImage) -> [(Double, Double, Double)]? {
         let side = 48
-        var pixels = [UInt8](repeating: 0, count: side * side * 4)
-        let drew = pixels.withUnsafeMutableBytes { buffer -> Bool in
+        var raw = [UInt8](repeating: 0, count: side * side * 4)
+        let drew = raw.withUnsafeMutableBytes { buffer -> Bool in
             guard let context = CGContext(
                 data: buffer.baseAddress, width: side, height: side,
                 bitsPerComponent: 8, bytesPerRow: side * 4,
@@ -54,29 +95,15 @@ enum DominantColor {
         guard drew else { return nil }
 
         let margin = Int(Double(side) * 0.15)
-        var hueBuckets = [Bucket](repeating: Bucket(), count: 12)   // 30° each
-        var everything = Bucket()
-
+        var pixels: [(Double, Double, Double)] = []
+        pixels.reserveCapacity((side - 2 * margin) * (side - 2 * margin))
         for y in margin..<(side - margin) {
             for x in margin..<(side - margin) {
                 let i = (y * side + x) * 4
-                let r = Double(pixels[i]) / 255
-                let g = Double(pixels[i + 1]) / 255
-                let b = Double(pixels[i + 2]) / 255
-                let (hue, saturation, value) = hsv(r, g, b)
-
-                everything.add(r, g, b)
-                if saturation > 0.25, value > 0.2 {
-                    hueBuckets[min(Int(hue / 30), 11)].add(r, g, b)
-                }
+                pixels.append((Double(raw[i]) / 255, Double(raw[i + 1]) / 255, Double(raw[i + 2]) / 255))
             }
         }
-        guard everything.count > 0, let best = hueBuckets.max(by: { $0.count < $1.count }) else { return nil }
-
-        // A colour needs ~10% of the middle of the picture to count; otherwise call it neutral.
-        let isColourful = Double(best.count) / Double(everything.count) >= 0.10
-        let (r, g, b) = (isColourful ? best : everything).average
-        return Result(name: name(r, g, b), hex: hex(r, g, b))
+        return pixels
     }
 
     // MARK: Colour maths

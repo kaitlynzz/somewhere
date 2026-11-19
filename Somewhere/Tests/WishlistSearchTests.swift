@@ -80,4 +80,27 @@ final class WishlistSearchTests: XCTestCase {
         XCTAssertEqual(ItemCategory.guess(from: "Mushroom lamp"), .room)
         XCTAssertEqual(ItemCategory.guess(from: "asdf"), .other)
     }
+
+    /// "blue shirt" should find a link save whose title says neither word,
+    /// once VisualIndexer has tagged its picture (Vision: "clothing", colour blue).
+    func testVisualTags_blueShirtFindsZaraLongSleeves() {
+        let zara = item("Zara long-sleeves", category: ItemCategory.guess(from: "Zara long-sleeves"))
+        zara.visualTags = "clothing"
+        zara.colorName = "blue"
+        let redTee = item("Ribbed baby tee", category: .clothes, color: "red")
+        let heels = item("Mary Jane pumps")
+        heels.visualTags = "high_heel shoes"
+
+        XCTAssertEqual(zara.category, .clothes)   // "sleeves" is a clothes keyword
+        XCTAssertEqual(WishlistSearch.filter([zara, redTee, heels], query: WishlistQuery(text: "blue shirt", includeCooling: true)).map(\.title),
+                       ["Zara long-sleeves"])
+        XCTAssertEqual(WishlistSearch.filter([zara, redTee, heels], query: WishlistQuery(text: "heels", includeCooling: true)).map(\.title),
+                       ["Mary Jane pumps"])
+    }
+
+    func testVisualTags_extraColourFromPlaid() {
+        let plaid = item("Broadcloth shirt", category: .clothes, color: "brown")
+        plaid.visualTags = "textile brown blue"
+        XCTAssertEqual(WishlistSearch.filter([plaid], query: WishlistQuery(text: "blue shirt", includeCooling: true)).count, 1)
+    }
 }

@@ -46,6 +46,12 @@ final class SavedItem {
     /// Exact dominant colour, e.g. "#3B63D9", for the swatch.
     var colorHex: String?
 
+    /// What Apple's image classifier sees in the picture, e.g. "clothing jacket".
+    /// Filled in the background by VisualIndexer; searched by WishlistSearch.
+    var visualTags: String?
+    /// Which VisualIndexer version last looked at this item (0 = not yet).
+    var visualIndexVersion: Int = 0
+
     // MARK: Cooling shelf (owned by Kaitlyn)
     var statusRaw: String = ItemStatus.cooling.rawValue
     var shelfReadyAt: Date = Date().addingTimeInterval(SavedItem.defaultCoolingPeriod)

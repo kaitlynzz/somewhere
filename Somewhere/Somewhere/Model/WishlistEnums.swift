@@ -46,12 +46,14 @@ enum ItemCategory: String, CaseIterable, Identifiable, Codable {
     var keywords: [String] {
         switch self {
         case .clothes:
-            ["clothes", "clothing", "outfit", "top", "shirt", "tee", "dress", "skirt", "pants",
-             "jeans", "shorts", "jacket", "coat", "sweater", "cardigan", "hoodie", "blouse"]
+            ["clothes", "clothing", "outfit", "top", "shirt", "tshirt", "tee", "tank", "cami",
+             "blouse", "polo", "dress", "skirt", "pants", "trousers", "jeans", "leggings",
+             "shorts", "jacket", "coat", "blazer", "sweater", "cardigan", "hoodie", "knit",
+             "jumper", "pullover", "crewneck", "turtleneck", "sleeve", "sleeves", "longsleeve"]
         case .accessories:
-            ["bag", "handbag", "purse", "tote", "shoes", "shoe", "sneakers", "heels", "boots",
-             "flats", "loafers", "jewelry", "necklace", "earrings", "ring", "bracelet",
-             "hat", "scarf", "belt", "sunglasses", "wallet"]
+            ["bag", "handbag", "purse", "tote", "shoes", "shoe", "sneakers", "sneaker", "heels",
+             "boots", "sandals", "flats", "loafers", "jewelry", "necklace", "earrings", "ring",
+             "bracelet", "watch", "hat", "cap", "scarf", "belt", "sunglasses", "glasses", "wallet"]
         case .room:
             ["room", "decor", "lamp", "rug", "pillow", "bedding", "sheets", "mirror", "chair",
              "desk", "shelf", "candle", "poster", "plant", "vase", "furniture"]

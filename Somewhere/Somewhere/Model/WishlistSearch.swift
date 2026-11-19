@@ -4,7 +4,8 @@
 //
 //  "that blue bag from TikTok" → blue (colour) + bag (category word) + TikTok (source).
 //  Every meaningful word must match *something* about the item:
-//  title, brand, note, screenshot text, colour, source app, category, link host.
+//  title, brand, note, screenshot text, what the picture shows (VisualTagger),
+//  colour, source app, category, link host.
 //
 //  Pure Foundation, so it's unit-testable and safe to add to both targets.
 //
@@ -75,6 +76,7 @@ enum WishlistSearch {
             item.price ?? "",
             item.note ?? "",
             item.recognizedText ?? "",
+            item.visualTags ?? "",      // "clothing jacket" — normalize turns "high_heel" into "high heel"
             item.colorName ?? "",
             item.linkHost ?? "",
             item.sourceApp.displayName,
