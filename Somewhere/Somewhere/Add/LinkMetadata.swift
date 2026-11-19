@@ -71,7 +71,12 @@ enum LinkMetadataParser {
         var meta = LinkMetadata()
 
         meta.siteName = clean(firstValue(tags, ["og:site_name", "application-name"]))
-            ?? baseURL.flatMap(displayHost(of:))
+        // Karan: called directly rather than passed to flatMap as a method
+        // reference — the reference form crosses an isolation boundary and
+        // warns under the project's concurrency settings.
+        if meta.siteName == nil, let baseURL {
+            meta.siteName = displayHost(of: baseURL)
+        }
         meta.brand = clean(firstValue(tags, ["product:brand", "og:brand", "brand"]))
         meta.price = price(from: tags)
 

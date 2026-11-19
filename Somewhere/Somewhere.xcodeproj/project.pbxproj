@@ -48,6 +48,8 @@
 		73BCABCA30A5029E006BC322 /* Exceptions for "Somewhere" folder in "SomewhereShare" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Add/LinkMetadata.swift,
+				Add/LinkMetadataFetcher.swift,
 				Model/SavedItem.swift,
 				Model/SharedStore.swift,
 				Model/ShelfSettings.swift,

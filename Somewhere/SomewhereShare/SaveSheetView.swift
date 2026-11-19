@@ -5,6 +5,11 @@
 //  Shows the screenshot as a polaroid, with the name and link pre-filled
 //  (both editable), and a "save to wishlist" button. Styled from Theme.
 //
+//  Karan: the sheet now also opens for a shared page, where there's no
+//  picture until the page has been read (and sometimes none at all). Two
+//  changes for that — placeholder artwork in the polaroid, and copy that
+//  says "page" instead of "screenshot".
+//
 //  Extension target only.
 //
 
@@ -100,6 +105,11 @@ struct SaveSheetView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
+                } else {
+                    // Karan: a shared page has no picture until it's been read,
+                    // and some pages never give one. An empty frame reads as
+                    // broken, so show something deliberate instead.
+                    pagePlaceholder
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 3))
@@ -110,6 +120,16 @@ struct SaveSheetView: View {
             .rotationEffect(.degrees(-2))
             .frame(width: 112)
             .accessibilityHidden(true)
+    }
+
+    /// Karan: stand-in artwork for a shared page.
+    private var pagePlaceholder: some View {
+        ZStack {
+            Theme.lavender
+            Image(systemName: model.isReading ? "ellipsis" : "link")
+                .font(.system(size: 22, weight: .light))
+                .foregroundStyle(Theme.periwinkle)
+        }
     }
 
     private var sourcePill: some View {
@@ -131,14 +151,17 @@ struct SaveSheetView: View {
         if model.isReading {
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small).tint(Theme.blue)
-                Text("reading your screenshot…")
+                // Karan: same spinner, right words for whichever we got.
+                Text(model.origin == .link ? "reading the page…" : "reading your screenshot…")
             }
             .font(Theme.body(13))
             .foregroundStyle(Theme.inkSoft)
         } else {
             Text(model.foundSomething
                  ? "filled in what I could — fix anything that's off."
-                 : "couldn't read much from this one — add a name below.")
+                 : (model.origin == .link
+                    ? "that page didn't say much — add a name below."    // Karan
+                    : "couldn't read much from this one — add a name below."))
                 .font(Theme.body(13))
                 .foregroundStyle(Theme.inkSoft)
                 .fixedSize(horizontal: false, vertical: true)
