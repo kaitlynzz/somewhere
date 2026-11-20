@@ -3,8 +3,8 @@
 //  Somewhere — Add (Karan)
 //
 //  Karan: the in-app "+" screen. Opens as a bottom sheet from the raised
-//  "+" in the tab bar (SomewhereTabBar). After a save it shows the "saved"
-//  card, and you swipe the sheet down to close it.
+//  "+" in the tab bar (SomewhereTabBar). After a save it plays the success
+//  animation (SaveSuccessView); swipe the sheet down to close it.
 //
 //  Two ways to put something on your wishlist without leaving the app:
 //  paste a link and let the page fill itself in, or just type a name.
@@ -20,7 +20,6 @@ import SwiftData
 struct AddItemView: View {
 
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
     @State private var model = AddItemModel()
     @FocusState private var focus: Field?
 
@@ -49,18 +48,26 @@ struct AddItemView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    header
-
                     if let saved = savedSummary {
-                        savedCard(title: saved.title, days: saved.coolingDays)
-                            .transition(.scale(scale: 0.95).combined(with: .opacity))
-                        swipeDownHint
+                        // One way forward ("add another"); closing is a swipe down.
+                        VStack(spacing: 18) {
+                            SaveSuccessView(title: saved.title, coolingDays: saved.coolingDays) {
+                                model.reset()
+                            }
+                            swipeDownHint
+                        }
+                        .padding(.top, 24)
+                        .transition(Self.successIn)
                     } else {
-                        linkCard
-                        if model.metadata != nil || model.previewImage != nil { previewCard }
-                        detailsCard
-                        if let saveError { helper(saveError, tint: .red) }
-                        saveButton
+                        VStack(alignment: .leading, spacing: 18) {
+                            header
+                            linkCard
+                            if model.metadata != nil || model.previewImage != nil { previewCard }
+                            detailsCard
+                            if let saveError { helper(saveError, tint: .red) }
+                            saveButton
+                        }
+                        .transition(Self.formOut)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -233,32 +240,16 @@ struct AddItemView: View {
         .padding(.top, 2)
     }
 
-    private func savedCard(title: String, days: Int) -> some View {
-        card {
-            Label("saved", systemImage: "checkmark.circle.fill")
-                .font(Theme.body(16, weight: .medium))
-                .foregroundStyle(Theme.green)
-
-            Text("\u{201C}\(title)\u{201D} is resting on your shelf for \(days) \(days == 1 ? "day" : "days").")
-                .font(Theme.body(15))
-
-            Text("that's why it isn't in your wishlist yet — when the time's up you'll decide to keep it or let it go.")
-                .font(Theme.body(13))
-                .foregroundStyle(Theme.inkSoft)
-
-            HStack(spacing: 12) {
-                Button {
-                    AppRouter.shared.selectedTab = .shelf
-                    dismiss()
-                } label: {
-                    Label("go to the shelf", systemImage: "hourglass")
-                }
-                Button("add another") { model.reset() }
-            }
-            .font(Theme.body(14, weight: .medium))
-            .padding(.top, 2)
-        }
-    }
+    /// The form gets out of the way fast, then the success screen fades in —
+    /// so the two never sit on top of each other mid-crossfade.
+    private static let formOut = AnyTransition.asymmetric(
+        insertion: .opacity.animation(.easeOut(duration: 0.25)),
+        removal: .opacity.animation(.easeIn(duration: 0.12))
+    )
+    private static let successIn = AnyTransition.asymmetric(
+        insertion: .opacity.animation(.easeOut(duration: 0.25).delay(0.12)),
+        removal: .opacity.animation(.easeIn(duration: 0.12))
+    )
 
     /// After a save the sheet's job is done — point at the way out.
     private var swipeDownHint: some View {

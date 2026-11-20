@@ -1,10 +1,13 @@
 //
 //  SomewhereTabBar.swift
-//  Somewhere — the bottom bar: wishlist · raised "+" · shelf.
+//  Somewhere — the floating Liquid Glass bar: [ wishlist · shelf ]  (+)
 //
-//  The system tab bar can't raise a middle button (and on iOS 26+ it floats
-//  as a glass capsule), so MainTabView hides it and draws this instead.
-//  "+" isn't a tab — it opens the add sheet on top of whichever tab you're on.
+//  iOS 26 style: the tabs live in one glass capsule, and the "+" is its own
+//  glass circle beside it (the same shape Apple uses for a separate search
+//  button). It's drawn here rather than by TabView because "+" isn't a tab —
+//  it opens the add sheet on top of whichever tab you're on.
+//
+//  iOS 17–25 has no Liquid Glass, so it falls back to a frosted material.
 //
 //  App target only.
 //
@@ -17,68 +20,61 @@ struct SomewhereTabBar: View {
     var shelfBadge: Int = 0
     var onAdd: () -> Void
 
+    @Namespace private var highlight
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            tab(.wishlist, title: "wishlist", symbol: "square.grid.2x2", selectedSymbol: "square.grid.2x2.fill")
-            addButton
-            tab(.shelf, title: "shelf", symbol: "hourglass", selectedSymbol: "hourglass", badge: shelfBadge)
+        GlassGroup {
+            HStack(spacing: 12) {
+                tabs
+                addButton
+            }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
-        .padding(.bottom, 2)
-        .background(alignment: .top) {
-            Theme.paper
-                .overlay(alignment: .top) {
-                    Rectangle().fill(Theme.ink.opacity(0.08)).frame(height: 1)
-                }
-                .shadow(color: Theme.ink.opacity(0.06), radius: 10, y: -2)
-                .ignoresSafeArea(edges: .bottom)
-        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 4)
     }
 
-    // MARK: Pieces
+    // MARK: Tabs capsule
+
+    private var tabs: some View {
+        HStack(spacing: 4) {
+            tab(.wishlist, title: "wishlist", symbol: "square.grid.2x2", selectedSymbol: "square.grid.2x2.fill")
+            tab(.shelf, title: "shelf", symbol: "hourglass", selectedSymbol: "hourglass", badge: shelfBadge)
+        }
+        .padding(4)
+        .glassCapsule()
+    }
 
     private func tab(_ tab: AppTab, title: String, symbol: String, selectedSymbol: String, badge: Int = 0) -> some View {
         let isSelected = selection == tab
         return Button {
-            selection = tab
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selection = tab }
         } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Image(systemName: isSelected ? selectedSymbol : symbol)
-                    .font(.system(size: 21, weight: .regular))
-                    .frame(height: 26)
+                    .font(.system(size: 19, weight: .medium))
+                    .frame(height: 24)
                     .overlay(alignment: .topTrailing) {
                         if badge > 0 { badgeView(badge) }
                     }
                 Text(title)
-                    .font(Theme.body(11, weight: isSelected ? .semibold : .regular))
+                    .font(Theme.body(11, weight: isSelected ? .semibold : .medium))
             }
-            .foregroundStyle(isSelected ? Theme.blue : Theme.inkSoft)
+            .foregroundStyle(isSelected ? Theme.blue : Theme.ink.opacity(0.75))
             .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
+            .padding(.vertical, 7)
+            .background {
+                // The selected tab gets a soft pill that slides between tabs.
+                if isSelected {
+                    Capsule()
+                        .fill(Theme.blue.opacity(0.12))
+                        .matchedGeometryEffect(id: "selected", in: highlight)
+                }
+            }
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(badge > 0 ? "\(title), \(badge) ready" : title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    /// Sits above the bar: a blue circle ringed in the bar's colour, so it
-    /// looks like the bar bulges up around it.
-    private var addButton: some View {
-        Button(action: onAdd) {
-            Image(systemName: "plus")
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 60, height: 60)
-                .background(Theme.blue, in: Circle())
-                .overlay(Circle().stroke(Theme.paper, lineWidth: 5))
-                .shadow(color: Theme.blue.opacity(0.35), radius: 10, y: 4)
-        }
-        .buttonStyle(RaisedPressStyle())
-        .offset(y: -22)
-        .padding(.bottom, -22)          // keep the bar its normal height
-        .frame(maxWidth: .infinity)
-        .accessibilityLabel("Add something")
     }
 
     private func badgeView(_ count: Int) -> some View {
@@ -90,21 +86,67 @@ struct SomewhereTabBar: View {
             .background(Theme.pink, in: Capsule())
             .offset(x: 10, y: -4)
     }
+
+    // MARK: "+"
+
+    private var addButton: some View {
+        Button(action: onAdd) {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 62, height: 62)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .glassCircle(tint: Theme.blue)
+        .accessibilityLabel("Add something")
+    }
 }
 
-/// Small squish on press so the "+" feels like a physical button.
-private struct RaisedPressStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+// MARK: - Glass (iOS 26+) with a material fallback
+
+/// Lets neighbouring glass shapes blend into each other like the system bar.
+private struct GlassGroup<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: 12) { content }
+        } else {
+            content
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func glassCapsule() -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(.regular.interactive(), in: Capsule())
+        } else {
+            self
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay(Capsule().stroke(.white.opacity(0.5), lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.12), radius: 16, y: 6)
+        }
+    }
+
+    @ViewBuilder
+    func glassCircle(tint: Color) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(.regular.tint(tint).interactive(), in: Circle())
+        } else {
+            self
+                .background(tint, in: Circle())
+                .shadow(color: tint.opacity(0.35), radius: 12, y: 5)
+        }
     }
 }
 
 #Preview {
-    VStack {
-        Spacer()
+    ZStack(alignment: .bottom) {
+        LinearGradient(colors: [Theme.pinkSoft, Theme.lavender], startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
         SomewhereTabBar(selection: .constant(.wishlist), shelfBadge: 2, onAdd: {})
     }
-    .background(Theme.cream)
 }
