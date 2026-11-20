@@ -4,6 +4,12 @@
 //  pulls the shared screenshot out of the extension context, reads it,
 //  pre-fills name + link, and saves through SavedItemStore.
 //
+//  Karan: this used to handle screenshots only — a share with no image was
+//  rejected outright, so you couldn't share a page from Safari to Somewhere.
+//  It now also accepts a plain link and fills the sheet in from the page's
+//  own Open Graph tags (LinkMetadataFetcher, shared with the in-app add
+//  screen). The screenshot path below is untouched.
+//
 //  Extension target only.
 //
 
@@ -40,9 +46,18 @@ final class ShareSaveModel {
         }
     }
 
+    /// Karan: where this share came from. A screenshot and a shared page
+    /// need different copy in the sheet and a different source badge.
+    enum Origin: Equatable {
+        case screenshot
+        case link
+    }
+
     // MARK: State the view reads
 
     private(set) var phase: Phase = .loading
+    /// Karan: set as soon as we know whether we were handed a picture or a page.
+    private(set) var origin: Origin = .screenshot
     private(set) var image: UIImage?
     /// True while Vision is reading the screenshot.
     private(set) var isReading = false
@@ -53,12 +68,17 @@ final class ShareSaveModel {
     var linkText = ""
 
     private var insights = ImageInsights()
+    /// Karan: what a shared page said about itself — title, image, brand, price.
+    private(set) var linkMetadata: LinkMetadata?
 
     // MARK: Derived
 
     /// Whether the scan found anything to pre-fill (drives the helper text).
     var foundSomething: Bool {
-        insights.titleGuess != nil || insights.linkGuess != nil
+        // Karan: for a shared page, "found something" means the page gave us
+        // a name or a picture.
+        if origin == .link { return linkMetadata?.title != nil || image != nil }
+        return insights.titleGuess != nil || insights.linkGuess != nil
     }
 
     /// The link as a real URL. Accepts "zara.com/shirt" and adds https://.
@@ -81,6 +101,11 @@ final class ShareSaveModel {
     /// Screenshots are "Screenshot" unless the link itself says TikTok / Instagram / Pinterest.
     var source: SourceApp {
         let fromLink = SourceApp.from(url: parsedLink)
+        // Karan: a shared page is whatever site it came from — Safari, a shop,
+        // wherever. Only a screenshot should fall back to .screenshot.
+        // (Before this, sharing a zara.com link would have been labelled
+        // "Screenshot", because .safari wasn't in the list below.)
+        if origin == .link { return fromLink }
         return [.tiktok, .instagram, .pinterest].contains(fromLink) ? fromLink : .screenshot
     }
 
@@ -96,25 +121,38 @@ final class ShareSaveModel {
         let items = (context?.inputItems as? [NSExtensionItem]) ?? []
         let providers = items.flatMap { $0.attachments ?? [] }
 
-        guard let imageProvider = providers.first(where: {
-            $0.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-        }) else {
-            phase = .failed("For now Somewhere saves screenshots and photos. Try sharing an image.")
-            return
-        }
-
-        // If the host app sent a web link along with the image, use it.
+        // Take the web link if the host app sent one — true both when it comes
+        // alongside an image and when it's all we get (Karan).
         if let linkProvider = providers.first(where: {
             $0.hasItemConformingToTypeIdentifier(UTType.url.identifier)
         }), let url = await Self.loadWebURL(from: linkProvider) {
             linkText = url.absoluteString
         }
 
-        guard let loaded = await Self.loadImage(from: imageProvider) else {
+        let imageProvider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+        })
+
+        // Karan: a picture still wins when there is one — that's the original
+        // screenshot flow. A link on its own used to fall straight through to
+        // a failure; now it has its own path.
+        if let imageProvider {
+            await loadScreenshot(from: imageProvider)
+        } else if parsedLink != nil {
+            await loadSharedPage()
+        } else {
+            phase = .failed("Somewhere saves pages and screenshots. Try sharing a link or an image.")
+        }
+    }
+
+    /// The original flow: a screenshot or photo, read with Vision.
+    private func loadScreenshot(from provider: NSItemProvider) async {
+        guard let loaded = await Self.loadImage(from: provider) else {
             phase = .failed("Somewhere couldn't open that image.")
             return
         }
 
+        origin = .screenshot
         image = loaded.value
         phase = .ready
 
@@ -124,6 +162,37 @@ final class ShareSaveModel {
             ScreenshotReader.read(loaded)
         }.value
         apply(result)
+    }
+
+    /// Karan: someone shared a page rather than a picture — Safari, a shop app,
+    /// anywhere with a share button. Show the sheet straight away so it never
+    /// feels stuck, then fill it in from the page's own tags using the same
+    /// parser the in-app add screen uses.
+    ///
+    /// Everything here is best-effort: a page that blocks us or says nothing
+    /// useful just leaves the fields empty for the person to type, which is
+    /// still better than the share being refused outright.
+    private func loadSharedPage() async {
+        guard let url = parsedLink else {
+            phase = .failed("Somewhere couldn't read that link.")
+            return
+        }
+
+        origin = .link
+        phase = .ready
+        isReading = true
+        defer { isReading = false }
+
+        guard let found = try? await LinkMetadataFetcher.metadata(for: url) else { return }
+        linkMetadata = found
+
+        // Never overwrite something the person has already typed.
+        if title.trimmingCharacters(in: .whitespaces).isEmpty, let pageTitle = found.title {
+            title = pageTitle
+        }
+        if let imageURL = found.imageURL {
+            image = await LinkMetadataFetcher.previewImage(at: imageURL)
+        }
     }
 
     private func apply(_ result: ImageInsights) {
@@ -154,7 +223,13 @@ final class ShareSaveModel {
                 title: title,
                 image: image,
                 link: parsedLink,
+                pageDescription: linkMetadata?.description,
                 source: source,
+                // Karan: brand and price come from the shared page's tags.
+                // SavedItemStore already accepted them and WishlistSearch
+                // already searches them — nothing ever filled them in before.
+                brand: linkMetadata?.brand,
+                price: linkMetadata?.price,
                 recognizedText: insights.recognizedText,
                 colorName: insights.colorName,
                 colorHex: insights.colorHex,

@@ -28,6 +28,12 @@ final class SavedItem {
 
     /// Product / post link, if the save came from a URL.
     var linkURLString: String?
+    /// The product page's own description (og:description), if the save came from a link.
+    var pageDescription: String?
+
+    /// What it is, e.g. "shirt", "jeans", "sneakers" — an ItemKind name.
+    /// More specific than `category`; see ItemKind.swift.
+    var itemType: String?
 
     // MARK: Where it came from (the "context")
     var sourceAppRaw: String = SourceApp.other.rawValue
@@ -45,6 +51,12 @@ final class SavedItem {
     var colorName: String?
     /// Exact dominant colour, e.g. "#3B63D9", for the swatch.
     var colorHex: String?
+
+    /// What Apple's image classifier sees in the picture, e.g. "clothing jacket".
+    /// Filled in the background by VisualIndexer; searched by WishlistSearch.
+    var visualTags: String?
+    /// Which VisualIndexer version last looked at this item (0 = not yet).
+    var visualIndexVersion: Int = 0
 
     // MARK: Cooling shelf (owned by Kaitlyn)
     var statusRaw: String = ItemStatus.cooling.rawValue

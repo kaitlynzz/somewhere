@@ -4,7 +4,13 @@
 //
 //  "that blue bag from TikTok" → blue (colour) + bag (category word) + TikTok (source).
 //  Every meaningful word must match *something* about the item:
-//  title, brand, note, screenshot text, colour, source app, category, link host.
+//  title, brand, note, page description, screenshot text, what it is
+//  (ItemKind), what the picture shows (VisualTagger), colour, source app,
+//  category, link host.
+//
+//  Item words are strict once we know what something is: "shirt" finds a
+//  long-sleeve top but not jeans, even if the jeans' description says
+//  "pairs well with a white shirt".
 //
 //  Pure Foundation, so it's unit-testable and safe to add to both targets.
 //
@@ -58,8 +64,13 @@ enum WishlistSearch {
     static func matches(_ item: SavedItem, tokens: [String]) -> Bool {
         guard !tokens.isEmpty else { return true }
         let text = haystack(for: item)
+        let kind = item.kind
         return tokens.allSatisfy { token in
             let forms = variants(of: token)
+            // "shirt" / "jeans" / "tote": when we know what the item is, that decides.
+            if let kind, forms.contains(where: ItemKind.kindWords.contains) {
+                return forms.contains(where: kind.searchTerms.contains)
+            }
             // Word-prefix match: "blu" finds "blue", but "red" doesn't hit "shared".
             if forms.contains(where: { text.contains(" " + $0) }) { return true }
             // "purse" finds a bag even if the title only says "Mini Dual Shoulder".
@@ -74,13 +85,17 @@ enum WishlistSearch {
             item.brand ?? "",
             item.price ?? "",
             item.note ?? "",
+            item.pageDescription ?? "",
             item.recognizedText ?? "",
+            item.itemType ?? "",
+            item.visualTags ?? "",      // "clothing jacket" — normalize turns "high_heel" into "high heel"
             item.colorName ?? "",
             item.linkHost ?? "",
             item.sourceApp.displayName,
             item.category.displayName,
             item.category.rawValue,
         ]
+        parts += item.kind?.searchWords ?? []
         parts += item.sourceApp.searchAliases
         if item.isCooling { parts.append("cooling shelf new") }
         return " " + normalize(parts.joined(separator: " ")) + " "

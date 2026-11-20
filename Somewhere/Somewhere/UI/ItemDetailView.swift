@@ -179,6 +179,13 @@ struct ItemDetailView: View {
                 .tint(Theme.ink)
             }
 
+            if let type = item.itemType {
+                row("what it is") {   // ItemKind: more specific than the category
+                    Text(type)
+                        .font(Theme.body(15))
+                }
+            }
+
             if item.colorName != nil || item.colorHex != nil {
                 row("colour") {
                     HStack(spacing: 8) {
@@ -189,6 +196,17 @@ struct ItemDetailView: View {
                         Text(item.colorName ?? "")
                             .font(Theme.body(15))
                     }
+                }
+            }
+
+            if let tags = item.visualTags, !tags.isEmpty {
+                // What Vision saw in the picture (VisualTagger) — the words search can use.
+                row("looks like") {
+                    Text(tags.split(separator: " ").prefix(4)
+                        .map { $0.replacingOccurrences(of: "_", with: " ") }
+                        .joined(separator: ", "))
+                        .font(Theme.body(15))
+                        .multilineTextAlignment(.trailing)
                 }
             }
 

@@ -8,6 +8,15 @@
 		<dict>
 			<key>NSExtensionActivationRule</key>
 			<dict>
+				<!-- Karan: WebURL is what makes Somewhere appear in the share
+				     sheet when you're on a page in Safari or a shop app.
+				     Without it the extension is only ever offered for
+				     screenshots and photos, which is why you couldn't share a
+				     product page to the app at all. Text is deliberately left
+				     out so Somewhere doesn't pop up for every snippet of
+				     selected text. -->
+				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+				<integer>1</integer>
 				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
 				<integer>1</integer>
 			</dict>
