@@ -2,8 +2,8 @@
 //  MainTabView.swift
 //  Somewhere — the tabs you see after onboarding.
 //
-//  For now: wishlist (Nicole) + shelf (Kaitlyn). Saving (Mina) and
-//  onboarding (Muskaan) plug in here when the branches are merged.
+//  wishlist (Nicole) · raised "+" · shelf (Kaitlyn), drawn by SomewhereTabBar.
+//  "+" opens Karan's add page (AddItemView) as a bottom sheet over either tab.
 //
 
 import SwiftUI
@@ -11,8 +11,6 @@ import SwiftData
 
 enum AppTab: Hashable {
     case wishlist
-    /// Karan: the in-app "+" (Add/AddItemView.swift).
-    case add
     case shelf
 }
 
@@ -22,6 +20,8 @@ enum AppTab: Hashable {
 final class AppRouter {
     static let shared = AppRouter()
     var selectedTab: AppTab = .wishlist
+    /// The add sheet (the raised "+" in the tab bar).
+    var isAddingItem = false
 }
 
 struct MainTabView: View {
@@ -45,18 +45,25 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $router.selectedTab) {
             WishlistView()
-                .tabItem { Label("wishlist", systemImage: "square.grid.2x2") }
                 .tag(AppTab.wishlist)
-
-            // Karan: add something by link, without leaving the app.
-            AddItemView()
-                .tabItem { Label("add", systemImage: "plus.circle") }
-                .tag(AppTab.add)
+                .toolbar(.hidden, for: .tabBar)
 
             ShelfView()
-                .tabItem { Label("shelf", systemImage: "hourglass") }
                 .tag(AppTab.shelf)
-                .badge(readyCount)
+                .toolbar(.hidden, for: .tabBar)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            SomewhereTabBar(selection: $router.selectedTab, shelfBadge: readyCount) {
+                router.isAddingItem = true
+            }
+        }
+        // Karan's add page, now a bottom sheet. After a save it shows the
+        // "saved" card; swipe down to close.
+        .sheet(isPresented: $router.isAddingItem) {
+            AddItemView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
         }
         .tint(Theme.blue)
         #if DEBUG

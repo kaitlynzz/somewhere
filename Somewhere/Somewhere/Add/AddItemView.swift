@@ -2,7 +2,9 @@
 //  AddItemView.swift
 //  Somewhere — Add (Karan)
 //
-//  Karan: the in-app "+" screen.
+//  Karan: the in-app "+" screen. Opens as a bottom sheet from the raised
+//  "+" in the tab bar (SomewhereTabBar). After a save it shows the "saved"
+//  card, and you swipe the sheet down to close it.
 //
 //  Two ways to put something on your wishlist without leaving the app:
 //  paste a link and let the page fill itself in, or just type a name.
@@ -18,6 +20,7 @@ import SwiftData
 struct AddItemView: View {
 
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @State private var model = AddItemModel()
     @FocusState private var focus: Field?
 
@@ -50,6 +53,8 @@ struct AddItemView: View {
 
                     if let saved = savedSummary {
                         savedCard(title: saved.title, days: saved.coolingDays)
+                            .transition(.scale(scale: 0.95).combined(with: .opacity))
+                        swipeDownHint
                     } else {
                         linkCard
                         if model.metadata != nil || model.previewImage != nil { previewCard }
@@ -67,6 +72,10 @@ struct AddItemView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .tint(Theme.blue)
+        // Don't let a swipe throw away a save that's halfway written.
+        .interactiveDismissDisabled(isSaving)
+        .sensoryFeedback(.success, trigger: savedSummary != nil) { _, saved in saved }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: savedSummary != nil)
     }
 
     // MARK: Header
@@ -80,7 +89,7 @@ struct AddItemView: View {
                 .font(Theme.body(14))
                 .foregroundStyle(Theme.inkSoft)
         }
-        .padding(.top, 8)
+        .padding(.top, 20)   // clear of the sheet's drag handle
     }
 
     // MARK: Link
@@ -239,8 +248,8 @@ struct AddItemView: View {
 
             HStack(spacing: 12) {
                 Button {
-                    model.reset()
                     AppRouter.shared.selectedTab = .shelf
+                    dismiss()
                 } label: {
                     Label("go to the shelf", systemImage: "hourglass")
                 }
@@ -249,6 +258,20 @@ struct AddItemView: View {
             .font(Theme.body(14, weight: .medium))
             .padding(.top, 2)
         }
+    }
+
+    /// After a save the sheet's job is done — point at the way out.
+    private var swipeDownHint: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "chevron.compact.down")
+                .font(.system(size: 28, weight: .medium))
+            Text("swipe down to close")
+                .font(Theme.body(13))
+        }
+        .foregroundStyle(Theme.inkSoft.opacity(0.7))
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+        .accessibilityHidden(true)   // VoiceOver users get the sheet's own close gesture
     }
 
     // MARK: Small pieces
