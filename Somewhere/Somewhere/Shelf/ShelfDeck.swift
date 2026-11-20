@@ -18,6 +18,11 @@ struct ShelfDeck: View {
     @State private var drag: CGSize = .zero
     /// Cards that already flew off, hidden until the store catches up.
     @State private var gone: Set<UUID> = []
+    /// Set once a drag has clearly gone sideways (swipe) or up/down (let the page scroll).
+    @State private var dragAxis: Axis?
+    /// The top card's content height. Cards behind it are cut to match, so a
+    /// taller card (one with a note) doesn't stick out underneath.
+    @State private var topContentHeight: CGFloat?
 
     private let swipeDistance: CGFloat = 110
 
@@ -32,6 +37,8 @@ struct ShelfDeck: View {
                 ShelfCard(
                     item: item,
                     dragX: isTop ? drag.width : 0,
+                    contentHeight: isTop ? nil : topContentHeight,
+                    onContentHeight: isTop ? { topContentHeight = $0 } : nil,
                     onKeep: { fly(item, keep: true) },
                     onLetGo: { fly(item, keep: false) }
                 )
@@ -41,7 +48,8 @@ struct ShelfDeck: View {
                 .rotationEffect(.degrees(isTop ? Double(drag.width / 22) : restingTilt(index)))
                 .zIndex(Double(10 - index))
                 .allowsHitTesting(isTop)
-                .gesture(dragGesture(for: item), including: isTop ? .all : .subviews)
+                // Simultaneous, so a vertical drag still scrolls the shelf page.
+                .simultaneousGesture(dragGesture(for: item), including: isTop ? .all : .subviews)
                 .accessibilityAction(named: "keep it") { fly(item, keep: true) }
                 .accessibilityAction(named: "let go") { fly(item, keep: false) }
             }
@@ -56,9 +64,17 @@ struct ShelfDeck: View {
     }
 
     private func dragGesture(for item: SavedItem) -> some Gesture {
-        DragGesture()
-            .onChanged { drag = $0.translation }
+        DragGesture(minimumDistance: 12)
+            .onChanged { value in
+                let t = value.translation
+                if dragAxis == nil {
+                    dragAxis = abs(t.width) > abs(t.height) ? .horizontal : .vertical
+                }
+                if dragAxis == .horizontal { drag = t }
+            }
             .onEnded { value in
+                defer { dragAxis = nil }
+                guard dragAxis == .horizontal else { return }   // that was a scroll
                 let x = value.translation.width
                 let flick = value.predictedEndTranslation.width
                 if x > swipeDistance || flick > swipeDistance * 2.5 {
@@ -95,6 +111,10 @@ struct ShelfDeck: View {
 struct ShelfCard: View {
     let item: SavedItem
     var dragX: CGFloat = 0
+    /// Cut the card to this content height (cards stacked behind the top one).
+    var contentHeight: CGFloat? = nil
+    /// Reports this card's natural content height (the top card).
+    var onContentHeight: ((CGFloat) -> Void)? = nil
     var onKeep: () -> Void
     var onLetGo: () -> Void
 
@@ -160,6 +180,9 @@ struct ShelfCard: View {
             }
             .buttonStyle(.plain)
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onContentHeight?($0) }
+        .frame(height: contentHeight, alignment: .top)
+        .clipped()
         .padding(12)
         .padding(.bottom, 2)
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
@@ -167,9 +190,14 @@ struct ShelfCard: View {
         .accessibilityElement(children: .contain)
     }
 
+    /// Fixed height: the card used to take "whatever's left" on the page, so it
+    /// shrank every time something was added to the cooling shelf below it.
+    static let photoHeight: CGFloat = 300
+
     private var photo: some View {
         Color.clear
-            .frame(maxWidth: .infinity, minHeight: 70, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.photoHeight)
             .overlay { ItemImageView(item: item, maxPixel: 1200) }
             .clipShape(RoundedRectangle(cornerRadius: 3))
             .overlay(alignment: .topLeading) {

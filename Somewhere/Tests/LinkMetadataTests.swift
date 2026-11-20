@@ -29,6 +29,16 @@ final class LinkMetadataTests: XCTestCase {
         XCTAssertNotNil(LinkMetadataParser.normalizedURL(from: "  https://tiktok.com/@x/video/1  \n"))
     }
 
+    /// Amazon's "copy link" includes the product name before the link.
+    func testFindsTheLinkInsideSharedText() {
+        XCTAssertEqual(
+            LinkMetadataParser.normalizedURL(from: "Ribbed Knit Top - Amazon.com https://a.co/d/0abc123")?.absoluteString,
+            "https://a.co/d/0abc123")
+        XCTAssertEqual(
+            LinkMetadataParser.normalizedURL(from: "check this out:\nhttps://www.zara.com/us/en/shirt-p1.html")?.host(),
+            "www.zara.com")
+    }
+
     func testRejectsThingsThatArentWebLinks() {
         XCTAssertNil(LinkMetadataParser.normalizedURL(from: ""))
         XCTAssertNil(LinkMetadataParser.normalizedURL(from: "the perfect shoes"))

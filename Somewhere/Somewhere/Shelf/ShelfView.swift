@@ -5,7 +5,10 @@
 //  The shelf tab:
 //  • top: swipe cards for saves whose cooling period is over
 //  • bottom: the "still cooling" shelf, with time left on each save
-//  • tap a cooling save to add a note / voice note on why you wanted it
+//  • tap a cooling save to see its details, add a note / voice note on why
+//    you wanted it, or decide early (keep it / let it go)
+//  The page scrolls, and the swipe card has a fixed size, so it doesn't
+//  shrink as the "still cooling" shelf fills up.
 //  • toolbar: change the waiting period and turn on reminders
 //
 //  Styled like Nicole's wishlist (Theme.swift) so the two tabs match.
@@ -38,29 +41,32 @@ struct ShelfView: View {
                 let ready = cooling.filter { $0.shelfReadyAt <= now }
                 let waiting = cooling.filter { $0.shelfReadyAt > now }
 
-                VStack(spacing: 0) {
-                    header(readyCount: ready.count)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        header(readyCount: ready.count)
 
-                    if ready.isEmpty {
-                        emptyState(next: waiting.first)
-                            .frame(maxHeight: .infinity)
-                    } else {
-                        ShelfDeck(items: ready, onDecide: decide)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 10)
-                            .padding(.bottom, 20)   // room for the cards stacked behind
-                            .frame(maxHeight: .infinity)
-                        swipeHint
-                    }
+                        if ready.isEmpty {
+                            emptyState(next: waiting.first)
+                                .padding(.vertical, 56)
+                        } else {
+                            ShelfDeck(items: ready, onDecide: decide)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 10)
+                                .padding(.bottom, 20)   // room for the cards stacked behind
+                            swipeHint
+                        }
 
-                    if reminderStatus == .notDetermined && !cooling.isEmpty {
-                        reminderPrompt
-                    }
+                        if reminderStatus == .notDetermined && !cooling.isEmpty {
+                            reminderPrompt
+                        }
 
-                    if !waiting.isEmpty {
-                        coolingShelf(waiting, now: now)
+                        if !waiting.isEmpty {
+                            coolingShelf(waiting, now: now)
+                        }
                     }
+                    .padding(.bottom, 24)
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
             .background(Theme.cream.ignoresSafeArea())
             .overlay(alignment: .bottom) { toastView }
@@ -70,7 +76,11 @@ struct ShelfView: View {
             new.map { $0.keep ? .success : .impact(weight: .light) }
         }
         .sheet(item: $selected) { item in
-            CoolingItemSheet(item: item) { decide(item, keep: false) }
+            CoolingItemSheet(
+                item: item,
+                onLetGo: { decide(item, keep: false) },
+                onKeep: { decide(item, keep: true) }
+            )
         }
         .sheet(isPresented: $showSettings, onDismiss: {
             coolingDays = ShelfSettings.coolingDays
@@ -324,8 +334,11 @@ struct CoolingTile: View {
         .accessibilityHint("Add a note on why you want it")
     }
 
-    private var timeLeft: String {
-        let seconds = item.shelfReadyAt.timeIntervalSince(now)
+    private var timeLeft: String { CoolingTile.timeLeft(until: item.shelfReadyAt, now: now) }
+
+    /// "3 days left" / "5h left" / "almost ready".
+    static func timeLeft(until readyAt: Date, now: Date) -> String {
+        let seconds = readyAt.timeIntervalSince(now)
         if seconds >= 82_800 {   // 23h+ reads as "1 day left"
             let days = Int((seconds / 86_400).rounded(.up))
             return "\(days) \(days == 1 ? "day" : "days") left"
@@ -357,10 +370,12 @@ struct ShelfSectionCard<Content: View>: View {
 
 // MARK: - Cooling item sheet
 
-/// "why I wanted it" — note + voice note for a save that's still cooling.
+/// A save that's still cooling: its details, "why I wanted it" (note + voice
+/// note), and a way to decide early.
 struct CoolingItemSheet: View {
     let item: SavedItem
     var onLetGo: () -> Void
+    var onKeep: () -> Void
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -368,12 +383,14 @@ struct CoolingItemSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Polaroid
+                // Polaroid. The photo fills a fixed box and is cropped to it —
+                // a filled image inside .frame(maxWidth: .infinity) grows to its
+                // own width, which pushed wide photos off the screen.
                 VStack(spacing: 12) {
-                    ItemImageView(item: item, maxPixel: 1200)
+                    Color.clear
                         .frame(maxWidth: .infinity)
                         .frame(height: 260)
-                        .clipped()
+                        .overlay { ItemImageView(item: item, maxPixel: 1200) }
                         .clipShape(RoundedRectangle(cornerRadius: 3))
                     Text(item.title)
                         .font(Theme.hand(20))
@@ -388,11 +405,15 @@ struct CoolingItemSheet: View {
                 .padding(.horizontal, 6)
 
                 ShelfSectionCard(label: "THE COOLING SHELF") {
-                    HStack(spacing: 10) {
-                        ShelfTimeBadge(text: "cooling")
-                        Text("ready \(item.shelfReadyAt, format: .dateTime.weekday(.wide).hour().minute())")
-                            .font(Theme.body(15, weight: .medium))
-                            .foregroundStyle(Theme.ink)
+                    TimelineView(.periodic(from: .now, by: 60)) { timeline in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(CoolingTile.timeLeft(until: item.shelfReadyAt, now: timeline.date))
+                                .font(Theme.display(28))
+                                .foregroundStyle(Theme.headlineGradient)
+                            Text("ready \(item.shelfReadyAt, format: .dateTime.weekday(.wide).hour().minute())")
+                                .font(Theme.body(15))
+                                .foregroundStyle(Theme.inkSoft)
+                        }
                     }
 
                     Divider().overlay(Theme.ink.opacity(0.05))
@@ -412,17 +433,33 @@ struct CoolingItemSheet: View {
                     }
                 }
 
-                Button {
-                    dismiss()
-                    onLetGo()
-                } label: {
-                    Text("let go now")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Theme.paper, in: Capsule())
-                        .overlay(Capsule().strokeBorder(Theme.ink.opacity(0.12)))
+                CoolingItemDetails(item: item)
+
+                VStack(spacing: 4) {
+                    Button {
+                        dismiss()
+                        onLetGo()
+                    } label: {
+                        Text("let go now")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.ink)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Theme.paper, in: Capsule())
+                            .overlay(Capsule().strokeBorder(Theme.ink.opacity(0.12)))
+                    }
+
+                    // Secondary: skip the wait and keep it.
+                    Button {
+                        dismiss()
+                        onKeep()
+                    } label: {
+                        Label("add to wishlist now", systemImage: "heart")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Theme.blue)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                    }
                 }
                 .buttonStyle(.plain)
             }
@@ -439,6 +476,70 @@ struct CoolingItemSheet: View {
             get: { item.note ?? "" },
             set: { item.note = $0.isEmpty ? nil : $0 }
         )
+    }
+}
+
+// MARK: - Cooling item details
+
+/// The same facts the wishlist's item page shows, read-only: what it is,
+/// where it's from, price, colour.
+struct CoolingItemDetails: View {
+    let item: SavedItem
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        ShelfSectionCard(label: "DETAILS") {
+            if let type = item.itemType {
+                row("what it is") { Text(type) }
+            }
+            row("category") {
+                Label(item.category.displayName, systemImage: item.category.symbol)
+            }
+            if let price = item.price, !price.isEmpty {
+                row("price") { Text(price).fontWeight(.semibold) }
+            }
+            if let brand = item.brand, !brand.isEmpty {
+                row("brand") { Text(brand) }
+            }
+            row("saved from") {
+                Label(item.sourceApp.displayName, systemImage: item.sourceApp.symbol)
+            }
+            if let host = item.linkHost, let url = item.linkURL {
+                row("store") {
+                    Button { openURL(url) } label: {
+                        Label(host, systemImage: "arrow.up.right")
+                            .labelStyle(TrailingIconLabelStyle())
+                    }
+                    .foregroundStyle(Theme.blue)
+                }
+            }
+            if item.colorName != nil || item.colorHex != nil {
+                row("colour") {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(item.colorHex.map { Color(hex: $0) } ?? Theme.inkSoft)
+                            .frame(width: 14, height: 14)
+                            .overlay(Circle().strokeBorder(.black.opacity(0.1)))
+                        Text(item.colorName ?? "")
+                    }
+                }
+            }
+            row("saved") {
+                Text(item.createdAt, format: .dateTime.month().day())
+            }
+        }
+    }
+
+    private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack {
+            Text(title).foregroundStyle(Theme.inkSoft)
+            Spacer(minLength: 12)
+            content()
+                .foregroundStyle(Theme.ink)
+                .lineLimit(1)
+        }
+        .font(Theme.body(15))
+        .frame(minHeight: 28)
     }
 }
 
