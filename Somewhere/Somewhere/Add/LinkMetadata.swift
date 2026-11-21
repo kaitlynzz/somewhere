@@ -48,20 +48,38 @@ enum LinkMetadataParser {
         return firstLink(in: text)
     }
 
+    /// Every link in a pasted list, one per line, in order, without repeats.
+    /// A line like "Ribbed Knit Top - Amazon.com https://a.co/d/abc" counts once
+    /// (the a.co link); a line with several full links gives each of them.
+    static func allURLs(in text: String) -> [URL] {
+        var urls: [URL] = []
+        for line in text.split(whereSeparator: \.isNewline).map(String.init) {
+            let full = detectedLinks(in: line).filter { $0.contains("://") }.compactMap(singleURL(from:))
+            let found = full.isEmpty ? [normalizedURL(from: line)].compactMap { $0 } : full
+            for url in found where !urls.contains(url) { urls.append(url) }
+        }
+        return urls
+    }
+
     /// The first web link written anywhere in `text`. A full "https://…" link
     /// wins over a bare domain, because product names often contain one
     /// ("… - Amazon.com https://a.co/d/abc" should give the a.co link).
     private static func firstLink(in text: String) -> URL? {
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
-            return nil
-        }
-        let found = detector.matches(in: text, range: NSRange(text.startIndex..., in: text))
-            .compactMap { Range($0.range, in: text).map { String(text[$0]) } }
+        let found = detectedLinks(in: text)
         let full = found.filter { $0.contains("://") }
         for candidate in full + found {
             if let url = singleURL(from: candidate) { return url }
         }
         return nil
+    }
+
+    /// The link-looking pieces of `text`, as written.
+    private static func detectedLinks(in text: String) -> [String] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+        return detector.matches(in: text, range: NSRange(text.startIndex..., in: text))
+            .compactMap { Range($0.range, in: text).map { String(text[$0]) } }
     }
 
     /// `text` as one link, or nil.
