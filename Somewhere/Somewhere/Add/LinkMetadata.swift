@@ -40,8 +40,32 @@ enum LinkMetadataParser {
     // MARK: - Links
 
     /// "zara.com/shirt" → https://zara.com/shirt.
-    /// Returns nil for anything that isn't a plain web link.
+    /// Also finds the link inside shared text, because Amazon's "copy link"
+    /// gives "Ribbed Knit Top - Amazon.com https://a.co/d/abc" rather than a
+    /// bare link. Returns nil when there's no web link at all.
     static func normalizedURL(from text: String) -> URL? {
+        if let url = singleURL(from: text) { return url }
+        return firstLink(in: text)
+    }
+
+    /// The first web link written anywhere in `text`. A full "https://…" link
+    /// wins over a bare domain, because product names often contain one
+    /// ("… - Amazon.com https://a.co/d/abc" should give the a.co link).
+    private static func firstLink(in text: String) -> URL? {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return nil
+        }
+        let found = detector.matches(in: text, range: NSRange(text.startIndex..., in: text))
+            .compactMap { Range($0.range, in: text).map { String(text[$0]) } }
+        let full = found.filter { $0.contains("://") }
+        for candidate in full + found {
+            if let url = singleURL(from: candidate) { return url }
+        }
+        return nil
+    }
+
+    /// `text` as one link, or nil.
+    private static func singleURL(from text: String) -> URL? {
         var trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
