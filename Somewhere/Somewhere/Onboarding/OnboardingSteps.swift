@@ -106,19 +106,16 @@ struct ShareSheetMock: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("wireless headphones")
-                        .font(.custom("Inter-SemiBold", size: 14))
-                        .foregroundStyle(Color.swInk)
+                        .swText(.bodyStrong, color: .swInk)
                     Text("tech.com · $180")
-                        .font(.custom("Inter-Regular", size: 12))
-                        .foregroundStyle(Color.swMuted)
+                        .swText(.caption, color: Color.swMuted)
                 }
                 Spacer()
 
                 HStack(spacing: 6) {
                     if phase == 2 {
                         Text("saved!")
-                            .font(.custom("Inter-Bold", size: 11))
-                            .foregroundStyle(Color.swBlue)
+                            .swText(.chip, color: .swBlue)
                             .transition(.scale.combined(with: .opacity))
                     }
                     Image(systemName: phase == 2 ? "checkmark" : "square.and.arrow.up")
@@ -158,8 +155,8 @@ struct ShareSheetMock: View {
                     )
 
                     Text("somewhere*")
-                        .font(.custom(phase >= 1 ? "Inter-Bold" : "Inter-Medium", size: 11))
-                        .foregroundStyle(Color.swInk)
+                        .swText(.caption)
+                        .fontWeight(phase >= 1 ? .bold : .medium)
                 }
                 .frame(maxWidth: .infinity)
 
@@ -200,8 +197,7 @@ struct ShareSheetMock: View {
                     .foregroundStyle(Color.swMuted.opacity(0.6))
             }
             Text(title)
-                .font(.custom("Inter-Regular", size: 11))
-                .foregroundStyle(Color.swMuted)
+                .swText(.caption, color: Color.swMuted)
         }
         .frame(maxWidth: .infinity)
         .opacity(dimmed ? 0.22 : 0.6)
@@ -237,8 +233,7 @@ struct PlacesStep: View {
             VStack(spacing: 12) {
                 HStack {
                     Text("your wishlist in action")
-                        .font(.custom("Inter-SemiBold", size: 11))
-                        .foregroundStyle(Color.swMuted)
+                        .swText(.chip, color: .swMuted)
                     Spacer()
                     SWSticker(text: "auto-filed", color: .swStickerButter, tilt: -2)
                 }
@@ -267,7 +262,8 @@ struct PlacesStep: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Text(place)
-                                    .font(.custom(on ? "Inter-SemiBold" : "Inter-Medium", size: 15))
+                                    .font(SWTextStyle.bodyStrong.font)
+                                    .tracking(SWTextStyle.bodyStrong.tracking)
                                 if on {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 11, weight: .bold))
@@ -288,7 +284,8 @@ struct PlacesStep: View {
                             Image(systemName: "plus")
                                 .font(.system(size: 12, weight: .semibold))
                             Text("add place")
-                                .font(.custom("Inter-Medium", size: 15))
+                                .font(SWTextStyle.bodyStrong.font)
+                                .tracking(SWTextStyle.bodyStrong.tracking)
                         }
                         .foregroundStyle(Color.swMuted)
                         .padding(.horizontal, 18)
@@ -304,8 +301,7 @@ struct PlacesStep: View {
             Spacer(minLength: 16)
 
             Text("\(model.places.count) places active")
-                .font(.custom("Inter-Medium", size: 13))
-                .foregroundStyle(Color.swMuted)
+                .swText(.caption, color: Color.swMuted)
                 .padding(.bottom, 16)
         }
         .alert("add a place", isPresented: $adding) {
@@ -330,11 +326,9 @@ struct PlacesStep: View {
                 .foregroundStyle(active ? Color.swBlue : Color.swMuted)
             VStack(alignment: .leading, spacing: 1) {
                 Text(item)
-                    .font(.custom("Inter-SemiBold", size: 12))
-                    .foregroundStyle(Color.swInk)
+                    .swText(.bodyStrong, color: .swInk)
                 Text(active ? "→ \(category)" : "unfiled")
-                    .font(.custom("Inter-Regular", size: 10))
-                    .foregroundStyle(active ? Color.swBlue : Color.swMuted)
+                    .swText(.caption, color: active ? .swBlue : .swMuted)
             }
         }
         .padding(.horizontal, 12)
@@ -406,15 +400,13 @@ struct CoolingShelfStep: View {
                         Image(systemName: "arrow.left")
                         Text("swipe to pass")
                     }
-                    .font(.custom("Inter-Medium", size: 12))
-                    .foregroundStyle(drag.width < -30 ? Color.red : Color.swMuted.opacity(0.7))
+                    .swText(.caption, color: drag.width < -30 ? Color.swError : Color.swMuted.opacity(0.7))
 
                     HStack(spacing: 4) {
                         Text("swipe to keep")
                         Image(systemName: "arrow.right")
                     }
-                    .font(.custom("Inter-Medium", size: 12))
-                    .foregroundStyle(drag.width > 30 ? Color.swBlue : Color.swMuted.opacity(0.7))
+                    .swText(.caption, color: drag.width > 30 ? Color.swBlue : Color.swMuted.opacity(0.7))
                 }
                 .padding(.bottom, 8)
             }
@@ -432,8 +424,7 @@ struct CoolingShelfStep: View {
                             }
                         } label: {
                             Text("reset card preview")
-                                .font(.custom("Inter-SemiBold", size: 14))
-                                .foregroundStyle(Color.swInk)
+                                .swText(.bodyStrong, color: .swInk)
                                 .padding(.horizontal, 16)
                                 .frame(height: 38)
                                 .background(Color.white, in: Capsule())
@@ -453,11 +444,9 @@ struct CoolingShelfStep: View {
             // feature description banner
             VStack(spacing: 4) {
                 Text("automatic 3-day cooling buffer")
-                    .font(.custom("Inter-SemiBold", size: 13))
-                    .foregroundStyle(Color.swInk)
+                    .swText(.bodyStrong, color: .swInk)
                 Text("gives impulse buys time to fade before you make a move.")
-                    .font(.custom("Inter-Regular", size: 12))
-                    .foregroundStyle(Color.swMuted)
+                    .swText(.caption, color: Color.swMuted)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
@@ -474,8 +463,7 @@ struct CoolingShelfStep: View {
                         .font(.system(size: 42))
                         .foregroundStyle(Color.swBlue)
                     Text("safari save")
-                        .font(.custom("Inter-Medium", size: 11))
-                        .foregroundStyle(Color.swBlue.opacity(0.8))
+                        .swText(.caption, color: Color.swBlue.opacity(0.8))
                 }
             }
         }

@@ -57,7 +57,7 @@
 				Model/ShelfSettings.swift,
 				Model/WishlistEnums.swift,
 				Model/WishlistSearch.swift,
-				UI/Theme.swift,
+				Onboarding/DesignSystem.swift,
 			);
 			target = 73BCABAB30A500C2006BC322 /* SomewhereShare */;
 		};

@@ -20,16 +20,56 @@ extension Color {
     // primary brand pop (only use one per screen area!)
     static let swBlue = Color(hex: "2F5BEA")
     static let swSky = Color(hex: "DCE5FD")
-    static let swBlue50 = Color(hex: "E8EEFD")
+    static let swBlue50 = Color(hex: "E9EEFE")
     
     // sticker accents only
     static let swStickerPink = Color(hex: "F7A8CB")
-    static let swStickerButter = Color(hex: "F7D040")
-    static let swStickerMint = Color(hex: "A6E2BE")
+    static let swStickerButter = Color(hex: "F7D046")
+    static let swStickerMint = Color(hex: "A9E2BE")
+
+    // errors & destructive hints only
+    static let swError = Color(hex: "C8323A")
 }
 
 // --- hex helper
-// Color(hex:) now lives in UI/Theme.swift (Nicole's), shared by the whole app.
+extension Color {
+    /// "#RRGGBB" or "RRGGBB". Bad input → gray.
+    init(hex: String) {
+        let cleaned = hex.trimmingCharacters(in: CharacterSet(charactersIn: "# "))
+        var value: UInt64 = 0
+        guard cleaned.count == 6, Scanner(string: cleaned).scanHexInt64(&value) else {
+            self = .gray
+            return
+        }
+        self.init(
+            red: Double((value >> 16) & 0xFF) / 255,
+            green: Double((value >> 8) & 0xFF) / 255,
+            blue: Double(value & 0xFF) / 255
+        )
+    }
+}
+
+// --- source app tint
+extension SourceApp {
+    var tint: Color {
+        switch self {
+        case .tiktok:     .swInk
+        case .instagram:  .swStickerPink
+        case .pinterest:  .swError
+        case .safari:     .swBlue
+        case .screenshot: .swStickerMint
+        case .other:      .swMuted
+        }
+    }
+
+    /// Text/icon colour on top of `tint`: sticker colours are too light to read, so they get ink.
+    var labelTint: Color {
+        switch self {
+        case .instagram, .screenshot: .swInk
+        default: tint
+        }
+    }
+}
 
 // --- typography system
 // inter font styles matching the design scale (always lowercase headlines!)
@@ -40,7 +80,8 @@ enum SWTextStyle {
     case body
     case bodyStrong
     case voice
-    case label
+    case label      // UPPERCASE eyebrows only ("THE LINK", "STILL COOLING")
+    case chip       // lowercase pills, badges, small meta ("safari", "2w ago")
     case caption
 
     var font: Font {
@@ -52,6 +93,7 @@ enum SWTextStyle {
         case .bodyStrong: return .custom("Inter-Medium", size: 15)
         case .voice: return .custom("Inter-SemiBoldItalic", size: 15)
         case .label: return .custom("Inter-SemiBold", size: 11)
+        case .chip: return .custom("Inter-SemiBold", size: 12)
         case .caption: return .custom("Inter-Regular", size: 12)
         }
     }

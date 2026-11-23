@@ -70,11 +70,11 @@ struct AddItemView: View {
                 .padding(.bottom, 40)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Theme.cream.ignoresSafeArea())
-            .toolbarBackground(Theme.cream, for: .navigationBar)
+            .background(Color.swPaper.ignoresSafeArea())
+            .toolbarBackground(Color.swPaper, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
         }
-        .tint(Theme.blue)
+        .tint(Color.swBlue)
         // Don't let a swipe throw away saves that are halfway done.
         .interactiveDismissDisabled(isSaving)
         .sensoryFeedback(.success, trigger: savedSummary != nil) { _, saved in saved }
@@ -104,7 +104,7 @@ struct AddItemView: View {
 
             AddItemRow(draft: model.single)
 
-            if let saveError { helper(saveError, tint: .red) }
+            if let saveError { helper(saveError, tint: Color.swError) }
 
             primaryButton(
                 model.phase == .saving ? "saving…" : "save to wishlist",
@@ -121,11 +121,11 @@ struct AddItemView: View {
         HStack(spacing: 10) {
             Image(systemName: "link")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.inkSoft.opacity(0.6))
+                .foregroundStyle(Color.swMuted.opacity(0.6))
 
             TextField("paste a link…", text: $model.single.linkText)
                 .textFieldStyle(.plain)
-                .font(Theme.body(15))
+                .font(SWTextStyle.body.font).tracking(SWTextStyle.body.tracking)
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -140,7 +140,7 @@ struct AddItemView: View {
                     Image(systemName: "xmark.circle.fill")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Theme.inkSoft.opacity(0.45))
+                .foregroundStyle(Color.swMuted.opacity(0.45))
                 .accessibilityLabel("Clear the link")
             } else {
                 PasteButton(payloadType: String.self) { strings in
@@ -149,15 +149,15 @@ struct AddItemView: View {
                 .labelStyle(.iconOnly)
                 .buttonBorderShape(.capsule)
                 .controlSize(.small)
-                .tint(Theme.blue)
+                .tint(Color.swBlue)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(model.single.isLinkValid ? Theme.ink.opacity(0.08) : .red.opacity(0.5), lineWidth: 1)
+                .stroke(model.single.isLinkValid ? Color.swLine : Color.swError.opacity(0.5), lineWidth: 1)
         )
     }
 
@@ -181,10 +181,10 @@ struct AddItemView: View {
                 }
             }
             .padding(.vertical, 4)
-            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Theme.ink.opacity(0.08), lineWidth: 1)
+                    .stroke(Color.swLine, lineWidth: 1)
             )
 
             let count = model.linksToAdd.count
@@ -208,15 +208,15 @@ struct AddItemView: View {
     private func linkRow(_ row: AddDraft) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Circle()
-                .strokeBorder(row.parsedLink != nil ? Theme.blue : Theme.inkSoft.opacity(0.35), lineWidth: 1.5)
-                .background(Circle().fill(row.parsedLink != nil ? Theme.blue.opacity(0.15) : .clear))
+                .strokeBorder(row.parsedLink != nil ? Color.swBlue : Color.swMuted.opacity(0.35), lineWidth: 1.5)
+                .background(Circle().fill(row.parsedLink != nil ? Color.swBlue.opacity(0.15) : .clear))
                 .frame(width: 20, height: 20)
                 .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
 
             VStack(alignment: .leading, spacing: 2) {
                 TextField("add a link…", text: Bindable(row).linkText)
                     .textFieldStyle(.plain)
-                    .font(Theme.body(15))
+                    .font(SWTextStyle.body.font).tracking(SWTextStyle.body.tracking)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -229,8 +229,7 @@ struct AddItemView: View {
 
                 if !row.isLinkValid {
                     Text("that doesn't look like a link")
-                        .font(Theme.body(11))
-                        .foregroundStyle(.red)
+                        .swText(.caption, color: .swError)
                 }
             }
 
@@ -239,7 +238,7 @@ struct AddItemView: View {
                     Image(systemName: "xmark.circle.fill")
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Theme.inkSoft.opacity(0.4))
+                .foregroundStyle(Color.swMuted.opacity(0.4))
                 .accessibilityLabel("Remove this link")
             }
         }
@@ -267,7 +266,7 @@ struct AddItemView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 10) {
                     ZStack {
-                        Circle().fill(model.isScanning ? Theme.blue.opacity(0.12) : Theme.green)
+                        Circle().fill(model.isScanning ? Color.swBlue.opacity(0.12) : Color.swBlue)
                             .frame(width: 34, height: 34)
                         if model.isScanning {
                             ProgressView().controlSize(.small)
@@ -279,13 +278,11 @@ struct AddItemView: View {
                         }
                     }
                     Text(resultsTitle)
-                        .font(Theme.display(28))
-                        .foregroundStyle(Theme.headlineGradient)
+                        .swText(.title)
                         .contentTransition(.numericText())
                 }
                 Text("they'll rest on your shelf for \(ShelfSettings.coolingDays) days. add a reason while you're here — future you will thank you.")
-                    .font(Theme.body(13))
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.caption, color: Color.swMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, 20)
@@ -347,9 +344,9 @@ struct AddItemView: View {
             Image(systemName: "chevron.compact.down")
                 .font(.system(size: 28, weight: .medium))
             Text("swipe down to close")
-                .font(Theme.body(13))
+                .font(SWTextStyle.caption.font).tracking(SWTextStyle.caption.tracking)
         }
-        .foregroundStyle(Theme.inkSoft.opacity(0.7))
+        .foregroundStyle(Color.swMuted.opacity(0.7))
         .frame(maxWidth: .infinity)
         .padding(.top, 12)
         .accessibilityHidden(true)   // VoiceOver users get the sheet's own close gesture
@@ -363,11 +360,9 @@ struct AddItemView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(Theme.display(32))
-                    .foregroundStyle(Theme.headlineGradient)
+                    .swText(.title)
                 Text(subtitle)
-                    .font(Theme.body(14))
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.caption, color: Color.swMuted)
             }
             Spacer(minLength: 8)
             trailing().padding(.top, 8)
@@ -378,11 +373,11 @@ struct AddItemView: View {
     private func modeButton(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
-                .font(Theme.body(12, weight: .medium))
+                .font(SWTextStyle.bodyStrong.font).tracking(SWTextStyle.bodyStrong.tracking)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Theme.blue.opacity(0.1), in: Capsule())
-                .foregroundStyle(Theme.blue)
+                .background(Color.swBlue.opacity(0.1), in: Capsule())
+                .foregroundStyle(Color.swBlue)
         }
         .buttonStyle(.plain)
     }
@@ -394,22 +389,18 @@ struct AddItemView: View {
             HStack(spacing: 8) {
                 if busy { ProgressView().controlSize(.small).tint(.white) }
                 if let systemImage { Image(systemName: systemImage) }
-                Text(title).font(Theme.body(16, weight: .medium))
+                Text(title)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(enabled ? Theme.blue : Theme.inkSoft.opacity(0.25), in: Capsule())
-            .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SWPrimaryButtonStyle())
+        .opacity(enabled ? 1 : 0.45)
         .disabled(!enabled)
         .padding(.top, 2)
     }
 
     private func helper(_ text: String, tint: Color) -> some View {
         Text(text)
-            .font(Theme.body(12))
-            .foregroundStyle(tint)
+            .swText(.caption, color: tint)
             .fixedSize(horizontal: false, vertical: true)
     }
 }

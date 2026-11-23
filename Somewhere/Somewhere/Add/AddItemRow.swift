@@ -29,8 +29,7 @@ struct AddItemRow: View {
                     nameField
                     if let price = draft.metadata?.price {
                         Text(price)
-                            .font(Theme.body(15, weight: .semibold))
-                            .foregroundStyle(Theme.pink)
+                            .swText(.bodyStrong)
                             .fixedSize()
                     }
                 }
@@ -42,10 +41,10 @@ struct AddItemRow: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Theme.ink.opacity(0.08), lineWidth: 1)
+                .stroke(Color.swLine, lineWidth: 1)
         )
         .overlay(alignment: .topTrailing) { removeButton }
         .animation(.easeOut(duration: 0.25), value: draft.lookup)
@@ -55,7 +54,7 @@ struct AddItemRow: View {
 
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Theme.cream)
+            .fill(Color.swPaper)
             .frame(width: 72, height: 90)
             .overlay {
                 if let image = draft.previewImage {
@@ -68,7 +67,7 @@ struct AddItemRow: View {
                 } else {
                     Image(systemName: draft.category.symbol)
                         .font(.system(size: 22))
-                        .foregroundStyle(Theme.inkSoft.opacity(0.4))
+                        .foregroundStyle(Color.swMuted.opacity(0.4))
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -79,12 +78,11 @@ struct AddItemRow: View {
     private var nameField: some View {
         if draft.isLooking && draft.title.isEmpty {
             Text("reading \(draft.host ?? "the page")…")
-                .font(Theme.body(15, weight: .medium))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.bodyStrong, color: Color.swMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             TextField(draft.savedItem == nil ? "what is it?" : "name it", text: $draft.title, axis: .vertical)
-                .font(Theme.body(15, weight: .medium))
+                .font(SWTextStyle.bodyStrong.font).tracking(SWTextStyle.bodyStrong.tracking)
                 .lineLimit(1...3)
                 .focused($focus, equals: .name)
                 .submitLabel(.next)
@@ -97,10 +95,9 @@ struct AddItemRow: View {
         HStack(spacing: 6) {
             Image(systemName: draft.source.symbol)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(draft.source.tint)
+                .foregroundStyle(draft.source.labelTint)
             Text(fromText)
-                .font(Theme.body(12))
-                .foregroundStyle(draft.lookupError == nil ? Theme.inkSoft : .red)
+                .swText(.caption, color: draft.lookupError == nil ? Color.swMuted : Color.swError)
                 .lineLimit(1)
 
             Spacer(minLength: 4)
@@ -128,23 +125,22 @@ struct AddItemRow: View {
                 Text(draft.category.displayName)
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold))
             }
-            .font(Theme.body(11, weight: .medium))
-            .foregroundStyle(Theme.blue)
+            .swText(.chip, color: Color.swBlue)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Theme.blue.opacity(0.1), in: Capsule())
+            .background(Color.swBlue.opacity(0.1), in: Capsule())
         }
         .accessibilityLabel("Category: \(draft.category.displayName)")
     }
 
     private var reasonField: some View {
         TextField("why do you want it? (optional)", text: $draft.note, axis: .vertical)
-            .font(Theme.body(13))
+            .font(SWTextStyle.caption.font).tracking(SWTextStyle.caption.tracking)
             .lineLimit(1...4)
             .focused($focus, equals: .reason)
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(Theme.cream, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(Color.swPaper, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     @ViewBuilder
@@ -153,9 +149,9 @@ struct AddItemRow: View {
             Button(action: onRemove) {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Theme.inkSoft)
+                    .foregroundStyle(Color.swMuted)
                     .frame(width: 22, height: 22)
-                    .background(Theme.cream, in: Circle())
+                    .background(Color.swPaper, in: Circle())
             }
             .buttonStyle(.plain)
             .padding(10)

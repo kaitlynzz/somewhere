@@ -2,6 +2,7 @@
 //  WishlistView.swift
 //  Somewhere — the Wishlist page: grid of everything you saved,
 //  search ("that blue bag from TikTok") and category / source filters.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -24,12 +25,12 @@ struct WishlistView: View {
                             placement: .navigationBarDrawer(displayMode: .always),
                             prompt: Text("that blue bag from TikTok…"))
                 .toolbar { toolbarContent }
-                .toolbarBackground(Theme.cream, for: .navigationBar)
+                .toolbarBackground(Color.swPaper, for: .navigationBar)
                 .navigationDestination(for: SavedItem.self) { item in
                     ItemDetailView(item: item)
                 }
         }
-        .tint(Theme.blue)
+        .tint(Color.swBlue)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { refreshToken = UUID() }
         }
@@ -60,7 +61,7 @@ struct WishlistView: View {
     }
 }
 
-// MARK: - Results (owns the @Query so it can be refreshed independently)
+// --- results (owns the @Query so it can be refreshed independently)
 
 private struct WishlistResults: View {
     @Binding var query: WishlistQuery
@@ -120,7 +121,7 @@ private struct WishlistResults: View {
             .padding(.bottom, 40)
         }
         .scrollDismissesKeyboard(.immediately)
-        .background(Theme.cream.ignoresSafeArea())
+        .background(Color.swPaper.ignoresSafeArea())
         .confirmationDialog(
             "Delete \u{201C}\(itemToDelete?.title ?? "")\u{201D}?",
             isPresented: Binding(get: { itemToDelete != nil },
@@ -139,16 +140,14 @@ private struct WishlistResults: View {
         }
     }
 
-    // MARK: Header
+    // --- header
 
     private func header(total: Int, showing: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("my wishlist")
-                .font(Theme.display(38))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.display)
             Text(subtitle(total: total, showing: showing))
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .contentTransition(.numericText())
         }
     }
@@ -158,11 +157,10 @@ private struct WishlistResults: View {
         Label(count == 1 ? "1 new save is cooling on the shelf"
                          : "\(count) new saves are cooling on the shelf",
               systemImage: "moon.zzz")
-            .font(Theme.body(13, weight: .medium))
-            .foregroundStyle(Theme.blue)
+            .swText(.caption, color: .swBlue)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background(Theme.lavender, in: Capsule())
+            .background(Color.swSky, in: Capsule())
     }
 
     private func subtitle(total: Int, showing: Int) -> String {
@@ -170,7 +168,7 @@ private struct WishlistResults: View {
         return total == 1 ? "1 thing, all in one place" : "\(total) things, all in one place"
     }
 
-    // MARK: Long-press menu
+    // --- long-press menu
 
     @ViewBuilder
     private func contextMenu(for item: SavedItem) -> some View {
@@ -198,7 +196,7 @@ private struct WishlistResults: View {
     }
 }
 
-// MARK: - Preview
+// --- preview
 
 #Preview("Wishlist") {
     WishlistView()

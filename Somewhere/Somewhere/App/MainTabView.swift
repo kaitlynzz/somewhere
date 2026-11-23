@@ -65,7 +65,7 @@ struct MainTabView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(28)
         }
-        .tint(Theme.blue)
+        .tint(Color.swBlue)
         #if DEBUG
         .task { ShelfDebug.handleLaunchArguments(in: context) }
         #endif

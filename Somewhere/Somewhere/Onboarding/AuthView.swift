@@ -34,13 +34,13 @@ struct AuthView: View {
                     model.email = $0 
                     model.errorMessage = nil
                 }))
-                .font(.custom("Inter-Regular", size: 16))
+                .swText(.body)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
                 .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(model.errorMessage != nil && !model.isEmailValid ? Color.red.opacity(0.8) : Color.swLine, lineWidth: 1)
+                        .stroke(model.errorMessage != nil && !model.isEmailValid ? Color.swError : Color.swLine, lineWidth: 1)
                 )
                 .textInputAutocapitalization(.never)
                 .keyboardType(.emailAddress)
@@ -50,13 +50,13 @@ struct AuthView: View {
                     model.password = $0 
                     model.errorMessage = nil
                 }))
-                .font(.custom("Inter-Regular", size: 16))
+                .swText(.body)
                 .padding(.horizontal, 16)
                 .frame(height: 52)
                 .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(model.errorMessage != nil && !model.isPasswordValid ? Color.red.opacity(0.8) : Color.swLine, lineWidth: 1)
+                        .stroke(model.errorMessage != nil && !model.isPasswordValid ? Color.swError : Color.swLine, lineWidth: 1)
                 )
             }
             .padding(.bottom, 12)
@@ -64,8 +64,7 @@ struct AuthView: View {
             // error message banner
             if let error = model.errorMessage {
                 Text(error)
-                    .font(.custom("Inter-Medium", size: 13))
-                    .foregroundStyle(Color.red)
+                    .swText(.caption, color: .swError)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 16)
                     .transition(.opacity)
@@ -78,12 +77,8 @@ struct AuthView: View {
                 model.completeAuth()
             } label: {
                 Text(model.isSigningUp ? "continue" : "sign in")
-                    .font(.custom("Inter-SemiBold", size: 16))
-                    .foregroundStyle(Color.swPaper)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color.swInk, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
+            .buttonStyle(SWPrimaryButtonStyle())
             .disabled(!model.isFormValid)
             .opacity(model.isFormValid ? 1.0 : 0.45)
             .padding(.bottom, 16)
