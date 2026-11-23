@@ -57,16 +57,16 @@ struct SomewhereTabBar: View {
                         if badge > 0 { badgeView(badge) }
                     }
                 Text(title)
-                    .font(Theme.body(11, weight: isSelected ? .semibold : .medium))
+                    .font(SWTextStyle.label.font)
             }
-            .foregroundStyle(isSelected ? Theme.blue : Theme.ink.opacity(0.75))
+            .foregroundStyle(isSelected ? Color.swBlue : Color.swMuted)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
             .background {
                 // The selected tab gets a soft pill that slides between tabs.
                 if isSelected {
                     Capsule()
-                        .fill(Theme.blue.opacity(0.12))
+                        .fill(Color.swBlue.opacity(0.12))
                         .matchedGeometryEffect(id: "selected", in: highlight)
                 }
             }
@@ -79,11 +79,11 @@ struct SomewhereTabBar: View {
 
     private func badgeView(_ count: Int) -> some View {
         Text(count > 9 ? "9+" : "\(count)")
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.white)
+            .font(SWTextStyle.label.font)
+            .foregroundStyle(Color.swInk)
             .padding(.horizontal, 5)
             .frame(minWidth: 16, minHeight: 16)
-            .background(Theme.pink, in: Capsule())
+            .background(Color.swStickerPink, in: Capsule())
             .offset(x: 10, y: -4)
     }
 
@@ -98,7 +98,7 @@ struct SomewhereTabBar: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .glassCircle(tint: Theme.blue)
+        .glassCircle(tint: Color.swBlue)
         .accessibilityLabel("Add something")
     }
 }
@@ -145,7 +145,7 @@ private extension View {
 
 #Preview {
     ZStack(alignment: .bottom) {
-        LinearGradient(colors: [Theme.pinkSoft, Theme.lavender], startPoint: .top, endPoint: .bottom)
+        LinearGradient(colors: [Color.swStickerPink.opacity(0.35), Color.swSky], startPoint: .top, endPoint: .bottom)
             .ignoresSafeArea()
         SomewhereTabBar(selection: .constant(.wishlist), shelfBadge: 2, onAdd: {})
     }

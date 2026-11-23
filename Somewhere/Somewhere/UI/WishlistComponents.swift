@@ -1,13 +1,14 @@
 //
 //  WishlistComponents.swift
 //  Somewhere — small building blocks for the Wishlist page.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
 import SwiftData
 import UIKit
 
-// MARK: - Polaroid card (grid cell)
+// --- polaroid card (grid cell)
 
 struct WishlistCard: View {
     let item: SavedItem
@@ -18,14 +19,13 @@ struct WishlistCard: View {
             Color.clear
                 .aspectRatio(1, contentMode: .fit)
                 .overlay { ItemImageView(item: item, maxPixel: 500) }
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(alignment: .topLeading) {
                     if item.isCooling { CoolingBadge(item: item).padding(6) }
                 }
 
             Text(item.title)
-                .font(Theme.hand(15))
-                .foregroundStyle(Theme.ink)
+                .swText(.caption)
                 .lineLimit(2, reservesSpace: true)
                 .multilineTextAlignment(.leading)
 
@@ -33,22 +33,22 @@ struct WishlistCard: View {
                 SourceChip(source: item.sourceApp, compact: true)
                 Spacer(minLength: 0)
                 Text(item.createdAt, format: .relative(presentation: .named, unitsStyle: .narrow))
-                    .font(.caption2)
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.chip, color: .swMuted)
                     .lineLimit(1)
             }
         }
         .padding(8)
         .padding(.bottom, 2)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-        .shadow(color: .black.opacity(0.07), radius: 10, y: 5)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .rotationEffect(.degrees(item.tiltDegrees))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), from \(item.sourceApp.displayName)")
     }
 }
 
-// MARK: - Image (async decode + cache)
+// --- image (async decode + cache)
 
 struct ItemImageView: View {
     let item: SavedItem
@@ -76,10 +76,10 @@ struct ItemImageView: View {
 
     private var placeholder: some View {
         ZStack {
-            (item.colorHex.map { Color(hex: $0) } ?? Theme.lavender).opacity(0.35)
+            (item.colorHex.map { Color(hex: $0) } ?? Color.swSky).opacity(0.35)
             Image(systemName: item.category.symbol)
                 .font(.system(size: 28, weight: .light))
-                .foregroundStyle(Theme.inkSoft.opacity(0.6))
+                .foregroundStyle(Color.swMuted.opacity(0.6))
         }
     }
 }
@@ -119,7 +119,7 @@ final class ThumbnailCache: @unchecked Sendable {
     }
 }
 
-// MARK: - Chips
+// --- chips
 
 struct SourceChip: View {
     let source: SourceApp
@@ -130,11 +130,10 @@ struct SourceChip: View {
             Image(systemName: source.symbol)
             if !compact { Text(source.displayName) }
         }
-        .font(.system(size: compact ? 10 : 12, weight: .semibold))
-        .foregroundStyle(source.tint)
+        .swText(.chip, color: source.labelTint)
         .padding(.horizontal, compact ? 6 : 9)
         .padding(.vertical, compact ? 3 : 5)
-        .background(source.tint.opacity(0.1), in: Capsule())
+        .background(source.tint.opacity(0.18), in: Capsule())
         .accessibilityLabel(source.displayName)
     }
 }
@@ -147,12 +146,13 @@ struct CoolingBadge: View {
             Image(systemName: item.isReadyToDecide ? "hand.draw" : "moon.zzz")
             Text(item.isReadyToDecide ? "decide" : "cooling")
         }
-        .font(.system(size: 10, weight: .bold))
-        .foregroundStyle(Theme.blue)
+        .lineLimit(1)
+        .fixedSize()
+        .swText(.chip, color: .swBlue)
         .padding(.horizontal, 7)
         .padding(.vertical, 4)
         .background(.ultraThinMaterial, in: Capsule())
-        .background(Theme.lavender.opacity(0.7), in: Capsule())
+        .background(Color.swSky.opacity(0.75), in: Capsule())
     }
 }
 
@@ -188,21 +188,20 @@ struct CategoryChips: View {
             HStack(spacing: 5) {
                 if let symbol { Image(systemName: symbol) }
                 Text(title)
-                Text("\(count)").foregroundStyle(isOn ? .white.opacity(0.75) : Theme.inkSoft)
+                Text("\(count)").foregroundStyle(isOn ? Color.swPaper.opacity(0.7) : Color.swMuted)
             }
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(isOn ? .white : Theme.ink)
+            .swText(.caption, color: isOn ? .swPaper : .swInk)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isOn ? AnyShapeStyle(Theme.pink) : AnyShapeStyle(Theme.paper), in: Capsule())
-            .overlay(Capsule().strokeBorder(Theme.ink.opacity(isOn ? 0 : 0.08)))
+            .background(isOn ? Color.swInk : Color.white, in: Capsule())
+            .overlay(Capsule().stroke(Color.swLine, lineWidth: isOn ? 0 : 1))
         }
         .buttonStyle(.plain)
         .animation(.snappy(duration: 0.2), value: isOn)
     }
 }
 
-// MARK: - Empty states
+// --- empty states
 
 struct EmptyWishlistView: View {
     enum Kind { case nothingSaved, noResults(String) }
@@ -212,14 +211,12 @@ struct EmptyWishlistView: View {
         VStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 34, weight: .light))
-                .foregroundStyle(Theme.periwinkle)
+                .foregroundStyle(Color.swBlue)
             Text(title)
-                .font(Theme.display(22))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.title)
                 .multilineTextAlignment(.center)
             Text(message)
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 32)

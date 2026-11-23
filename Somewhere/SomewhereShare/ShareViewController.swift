@@ -7,6 +7,7 @@
 //  tells iOS when we're done.
 //
 //  Extension target only.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import UIKit
@@ -19,9 +20,9 @@ final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Theme is a light palette (cream / paper), so keep the sheet light.
+        // DesignSystem uses a light paper palette, so keep the sheet light.
         overrideUserInterfaceStyle = .light
-        view.backgroundColor = UIColor(Theme.cream)
+        view.backgroundColor = UIColor(Color.swPaper)
 
         let sheet = SaveSheetView(
             model: model,

@@ -1,6 +1,7 @@
 //
 //  VoiceNoteRow.swift
 //  Somewhere — plays the "why I wanted it" voice note Kaitlyn's shelf records.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -19,18 +20,18 @@ struct VoiceNoteRow: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 34, height: 34)
-                    .background(Theme.pink, in: Circle())
+                    .background(Color.swStickerPink, in: Circle())
 
                 ProgressView(value: player.progress)
-                    .tint(Theme.pink)
+                    .tint(Color.swStickerPink)
 
                 Text(Duration.seconds(player.duration(of: url)),
                      format: .time(pattern: .minuteSecond))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.chip, color: .swMuted)
+                    .monospacedDigit()
             }
             .padding(10)
-            .background(Theme.pinkSoft.opacity(0.6), in: Capsule())
+            .background(Color.swStickerPink.opacity(0.18), in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(player.isPlaying ? "Pause voice note" : "Play voice note")

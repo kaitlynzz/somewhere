@@ -2,6 +2,7 @@
 //  ItemDetailView.swift
 //  Somewhere — the "context" page for one saved item:
 //  what it is, where & when you saw it, why you wanted it, and what to do next.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -31,9 +32,9 @@ struct ItemDetailView: View {
             .padding(.bottom, 40)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Theme.cream.ignoresSafeArea())
+        .background(Color.swPaper.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.cream, for: .navigationBar)
+        .toolbarBackground(Color.swPaper, for: .navigationBar)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if let url = item.linkURL {
@@ -63,7 +64,7 @@ struct ItemDetailView: View {
         }
     }
 
-    // MARK: - Photo
+    // --- photo
 
     private var polaroid: some View {
         VStack(spacing: 12) {
@@ -71,34 +72,32 @@ struct ItemDetailView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 340)
                 .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             Text(item.title)
-                .font(Theme.hand(20))
-                .foregroundStyle(Theme.ink)
+                .swText(.headline)
                 .lineLimit(1)
                 .padding(.bottom, 6)
         }
         .padding(12)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-        .shadow(color: .black.opacity(0.08), radius: 14, y: 8)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
         .rotationEffect(.degrees(item.tiltDegrees))
         .padding(.horizontal, 6)
     }
 
-    // MARK: - Name, brand, price
+    // --- name, brand, price
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 6) {
             TextField("give it a name", text: $item.title, axis: .vertical)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(Theme.ink)
+                .swText(.title)
 
             let meta = [item.brand, item.price].compactMap { $0 }.filter { !$0.isEmpty }
             if !meta.isEmpty {
                 Text(meta.joined(separator: " · "))
-                    .font(Theme.body(15, weight: .medium))
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.caption, color: .swMuted)
             }
         }
     }
@@ -112,15 +111,14 @@ struct ItemDetailView: View {
                 Spacer()
                 Image(systemName: "arrow.up.right")
             }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
+            .swText(.bodyStrong, color: .white)
             .padding(.horizontal, 18)
             .padding(.vertical, 15)
-            .background(Theme.ink, in: Capsule())
+            .background(Color.swInk, in: Capsule())
         }
     }
 
-    // MARK: - The story: where, when, why
+    // --- the story: where, when, why
 
     private var storySection: some View {
         SectionCard(label: "THE STORY") {
@@ -129,27 +127,25 @@ struct ItemDetailView: View {
                 SourceChip(source: item.sourceApp)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("saved \(item.createdAt, format: .relative(presentation: .named))")
-                        .font(Theme.body(15, weight: .medium))
+                        .swText(.bodyStrong)
                     Text(item.createdAt, format: .dateTime.weekday(.wide).month().day().hour().minute())
-                        .font(.caption)
-                        .foregroundStyle(Theme.inkSoft)
+                        .swText(.chip, color: .swMuted)
                 }
             }
 
-            Divider().overlay(Theme.ink.opacity(0.05))
+            Divider().overlay(Color.swLine)
 
             // Why
             VStack(alignment: .leading, spacing: 8) {
                 Text("why I wanted it")
-                    .font(Theme.hand(17))
-                    .foregroundStyle(Theme.pink)
+                    .swText(.bodyStrong, color: .swBlue)
 
                 TextField("wore it to… / perfect for… / because…", text: noteBinding, axis: .vertical)
-                    .font(Theme.body(15))
+                    .swText(.voice)
                     .lineLimit(2...6)
                     .focused($noteFocused)
                     .padding(12)
-                    .background(Theme.yellow.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
+                    .background(Color.swStickerButter.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                 if let url = item.voiceNoteURL {
                     VoiceNoteRow(url: url)
@@ -165,7 +161,7 @@ struct ItemDetailView: View {
         )
     }
 
-    // MARK: - Details: category, colour, shelf
+    // --- details: category, colour, shelf
 
     private var detailsSection: some View {
         SectionCard(label: "DETAILS") {
@@ -176,13 +172,13 @@ struct ItemDetailView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .tint(Theme.ink)
+                .tint(Color.swInk)
             }
 
             if let type = item.itemType {
                 row("what it is") {   // ItemKind: more specific than the category
                     Text(type)
-                        .font(Theme.body(15))
+                        .swText(.body)
                 }
             }
 
@@ -190,11 +186,11 @@ struct ItemDetailView: View {
                 row("colour") {
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(item.colorHex.map { Color(hex: $0) } ?? Theme.inkSoft)
+                            .fill(item.colorHex.map { Color(hex: $0) } ?? Color.swMuted)
                             .frame(width: 16, height: 16)
-                            .overlay(Circle().strokeBorder(.black.opacity(0.1)))
+                            .overlay(Circle().strokeBorder(Color.swLine))
                         Text(item.colorName ?? "")
-                            .font(Theme.body(15))
+                            .swText(.body)
                     }
                 }
             }
@@ -205,15 +201,14 @@ struct ItemDetailView: View {
                     Text(tags.split(separator: " ").prefix(4)
                         .map { $0.replacingOccurrences(of: "_", with: " ") }
                         .joined(separator: ", "))
-                        .font(Theme.body(15))
+                        .swText(.body)
                         .multilineTextAlignment(.trailing)
                 }
             }
 
             row("shelf") {
                 Text(shelfText)
-                    .font(Theme.body(15))
-                    .foregroundStyle(item.isCooling ? Theme.blue : Theme.green)
+                    .swText(.body, color: item.isCooling ? .swBlue : .swInk)
                     .multilineTextAlignment(.trailing)
             }
         }
@@ -237,32 +232,30 @@ struct ItemDetailView: View {
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack {
             Text(title)
-                .font(Theme.body(15))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.body, color: .swMuted)
             Spacer()
             content()
         }
         .frame(minHeight: 32)
     }
 
-    // MARK: - Text found in screenshot
+    // --- text found in screenshot
 
     private func foundTextSection(_ text: String) -> some View {
         SectionCard(label: "TEXT IN THE SCREENSHOT") {
             Text(text)
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .lineLimit(showFoundText ? nil : 3)
                 .textSelection(.enabled)
             Button(showFoundText ? "show less" : "show all") {
                 withAnimation(.snappy) { showFoundText.toggle() }
             }
-            .font(.system(size: 13, weight: .semibold))
+            .swText(.caption, color: .swBlue)
         }
     }
 }
 
-// MARK: - Section card
+// --- section card
 
 private struct SectionCard<Content: View>: View {
     let label: String
@@ -271,18 +264,17 @@ private struct SectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(label)
-                .font(Theme.label)
-                .foregroundStyle(Theme.blue)
+                .swText(.label, color: .swBlue)
             content
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
     }
 }
 
-// MARK: - Preview
+// --- preview
 
 #Preview {
     let container = SampleData.previewContainer

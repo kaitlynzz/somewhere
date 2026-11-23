@@ -11,7 +11,7 @@
 //  shrink as the "still cooling" shelf fills up.
 //  • toolbar: change the waiting period and turn on reminders
 //
-//  Styled like Nicole's wishlist (Theme.swift) so the two tabs match.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -68,10 +68,10 @@ struct ShelfView: View {
                 }
                 .scrollBounceBehavior(.basedOnSize)
             }
-            .background(Theme.cream.ignoresSafeArea())
+            .background(Color.swPaper.ignoresSafeArea())
             .overlay(alignment: .bottom) { toastView }
         }
-        .tint(Theme.blue)
+        .tint(Color.swBlue)
         .sensoryFeedback(trigger: toast) { _, new in
             new.map { $0.keep ? .success : .impact(weight: .light) }
         }
@@ -91,19 +91,17 @@ struct ShelfView: View {
         .task { reminderStatus = await ShelfNotifications.authorizationStatus() }
     }
 
-    // MARK: Header + toolbar
+    // --- header + toolbar
 
     private func header(readyCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             topButtons
             Text("the cooling shelf")
-                .font(Theme.display(38))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.display)
             Text(readyCount > 0
                  ? "\(readyCount) \(readyCount == 1 ? "thing has" : "things have") cooled off"
                  : "things rest here for \(coolingDays) \(coolingDays == 1 ? "day" : "days") before you decide")
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -135,10 +133,11 @@ struct ShelfView: View {
                 .accessibilityLabel("Shelf settings")
             }
             .font(.system(size: 18, weight: .medium))
-            .foregroundStyle(Theme.blue)
+            .foregroundStyle(Color.swBlue)
             .padding(.horizontal, 14)
             .frame(height: 44)
             .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.swLine, lineWidth: 1))
             .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
         }
         .padding(.bottom, 4)
@@ -150,22 +149,20 @@ struct ShelfView: View {
             Label { Text("keep it") } icon: { Image(systemName: "arrow.right") }
                 .labelStyle(TrailingIconLabelStyle())
         }
-        .font(Theme.body(12, weight: .medium))
-        .foregroundStyle(Theme.inkSoft.opacity(0.8))
+        .swText(.chip, color: .swMuted)
         .padding(.bottom, 12)
         .accessibilityHidden(true)
     }
 
-    // MARK: Empty
+    // --- empty
 
     private func emptyState(next: SavedItem?) -> some View {
         VStack(spacing: 14) {
             Image(systemName: next == nil ? "sparkles" : "moon.zzz")
                 .font(.system(size: 34, weight: .light))
-                .foregroundStyle(Theme.periwinkle)
+                .foregroundStyle(Color.swBlue)
             Text(next == nil ? "nothing cooling yet" : "nothing to decide yet")
-                .font(Theme.display(22))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.title)
                 .multilineTextAlignment(.center)
             Group {
                 if let next {
@@ -174,23 +171,21 @@ struct ShelfView: View {
                     Text("New saves rest here for a few days, so impulse buys have time to fade.")
                 }
             }
-            .font(Theme.body(14))
-            .foregroundStyle(Theme.inkSoft)
+            .swText(.caption, color: .swMuted)
             .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 32)
     }
 
-    // MARK: Reminders
+    // --- reminders
 
     private var reminderPrompt: some View {
         HStack(spacing: 12) {
             Image(systemName: "bell.badge")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Theme.pink)
+                .foregroundStyle(Color.swBlue)
             Text("get a nudge when something's ready")
-                .font(Theme.body(14, weight: .medium))
-                .foregroundStyle(Theme.ink)
+                .swText(.caption)
             Spacer(minLength: 8)
             Button("turn on") {
                 Task {
@@ -199,30 +194,27 @@ struct ShelfView: View {
                     await ShelfNotifications.sync(cooling.map(ShelfNotifications.Reminder.init))
                 }
             }
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(.white)
+            .swText(.caption, color: .swPaper)
             .padding(.horizontal, 14)
             .frame(height: 34)
-            .background(Theme.ink, in: Capsule())
+            .background(Color.swInk, in: Capsule())
         }
         .padding(14)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
     }
 
-    // MARK: Still cooling
+    // --- still cooling
 
     private func coolingShelf(_ items: [SavedItem], now: Date) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Text("STILL COOLING")
-                    .font(Theme.label)
-                    .foregroundStyle(Theme.blue)
+                    .swText(.label, color: .swBlue)
                 Text("\(items.count)")
-                    .font(Theme.label)
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.chip, color: .swMuted)
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
@@ -241,10 +233,10 @@ struct ShelfView: View {
                 .padding(.bottom, 12)
             }
         }
-        .background(Theme.lavender.opacity(0.7))
+        .background(Color.swSky.opacity(0.65))
     }
 
-    // MARK: Decide + undo
+    // --- decide + undo
 
     private func decide(_ item: SavedItem, keep: Bool) {
         SavedItemStore.decide(item, keep: keep, in: context)
@@ -262,16 +254,14 @@ struct ShelfView: View {
         if let toast {
             HStack(spacing: 14) {
                 Text(toast.keep ? "kept. good decision." : "let go. saved money.")
-                    .font(Theme.body(15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .swText(.bodyStrong, color: .swPaper)
                 Spacer(minLength: 8)
                 Button("undo") { undo(toast) }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Theme.yellow)
+                    .swText(.bodyStrong, color: .swStickerButter)
             }
             .padding(.horizontal, 20)
             .frame(height: 52)
-            .background(Theme.ink, in: Capsule())
+            .background(Color.swInk, in: Capsule())
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -291,7 +281,7 @@ struct DecisionToast: Equatable {
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
 }
 
-// MARK: - Cooling tile
+// --- cooling tile
 
 /// A small polaroid on the "still cooling" shelf — same look as a wishlist card.
 struct CoolingTile: View {
@@ -303,7 +293,7 @@ struct CoolingTile: View {
             Color.clear
                 .frame(width: 96, height: 96)
                 .overlay { ItemImageView(item: item, maxPixel: 500) }
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(alignment: .topLeading) {
                     ShelfTimeBadge(text: timeLeft).padding(5)
                 }
@@ -313,21 +303,21 @@ struct CoolingTile: View {
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(5)
-                            .background(Theme.pink, in: Circle())
+                            .background(Color.swStickerPink, in: Circle())
                             .padding(5)
                     }
                 }
 
             Text(item.title)
-                .font(Theme.hand(14))
-                .foregroundStyle(Theme.ink)
+                .swText(.caption)
                 .lineLimit(1)
                 .frame(width: 96, alignment: .leading)
         }
         .padding(7)
         .padding(.bottom, 2)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-        .shadow(color: .black.opacity(0.07), radius: 10, y: 5)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .rotationEffect(.degrees(item.tiltDegrees))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(timeLeft)")
@@ -348,7 +338,7 @@ struct CoolingTile: View {
     }
 }
 
-// MARK: - Section card (same look as the wishlist's item page)
+// --- section card
 
 struct ShelfSectionCard<Content: View>: View {
     let label: String
@@ -357,18 +347,17 @@ struct ShelfSectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(label)
-                .font(Theme.label)
-                .foregroundStyle(Theme.blue)
+                .swText(.label, color: .swBlue)
             content
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
     }
 }
 
-// MARK: - Cooling item sheet
+// --- cooling item sheet
 
 /// A save that's still cooling: its details, "why I wanted it" (note + voice
 /// note), and a way to decide early.
@@ -393,14 +382,14 @@ struct CoolingItemSheet: View {
                         .overlay { ItemImageView(item: item, maxPixel: 1200) }
                         .clipShape(RoundedRectangle(cornerRadius: 3))
                     Text(item.title)
-                        .font(Theme.hand(20))
-                        .foregroundStyle(Theme.ink)
+                        .swText(.headline)
                         .lineLimit(1)
                         .padding(.bottom, 6)
                 }
                 .padding(12)
-                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-                .shadow(color: .black.opacity(0.08), radius: 14, y: 8)
+                .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+                .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
                 .rotationEffect(.degrees(item.tiltDegrees))
                 .padding(.horizontal, 6)
 
@@ -408,26 +397,23 @@ struct CoolingItemSheet: View {
                     TimelineView(.periodic(from: .now, by: 60)) { timeline in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(CoolingTile.timeLeft(until: item.shelfReadyAt, now: timeline.date))
-                                .font(Theme.display(28))
-                                .foregroundStyle(Theme.headlineGradient)
+                                .swText(.title)
                             Text("ready \(item.shelfReadyAt, format: .dateTime.weekday(.wide).hour().minute())")
-                                .font(Theme.body(15))
-                                .foregroundStyle(Theme.inkSoft)
+                                .swText(.body, color: Color.swMuted)
                         }
                     }
 
-                    Divider().overlay(Theme.ink.opacity(0.05))
+                    Divider().overlay(Color.swLine)
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("why I wanted it")
-                            .font(Theme.hand(17))
-                            .foregroundStyle(Theme.pink)
+                            .swText(.bodyStrong, color: .swBlue)
 
                         TextField("wore it to… / perfect for… / because…", text: noteBinding, axis: .vertical)
-                            .font(Theme.body(15))
+                            .swText(.voice)
                             .lineLimit(2...6)
                             .padding(12)
-                            .background(Theme.yellow.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
+                            .background(Color.swStickerButter.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
                         VoiceNoteRecorderView(item: item)
                     }
@@ -441,12 +427,11 @@ struct CoolingItemSheet: View {
                         onLetGo()
                     } label: {
                         Text("let go now")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Theme.ink)
+                            .swText(.bodyStrong)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(Theme.paper, in: Capsule())
-                            .overlay(Capsule().strokeBorder(Theme.ink.opacity(0.12)))
+                            .background(Color.white, in: Capsule())
+                            .overlay(Capsule().strokeBorder(Color.swLine))
                     }
 
                     // Secondary: skip the wait and keep it.
@@ -455,8 +440,7 @@ struct CoolingItemSheet: View {
                         onKeep()
                     } label: {
                         Label("add to wishlist now", systemImage: "heart")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(Theme.blue)
+                            .swText(.bodyStrong, color: .swBlue)
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
                     }
@@ -466,7 +450,7 @@ struct CoolingItemSheet: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Theme.cream.ignoresSafeArea())
+        .background(Color.swPaper.ignoresSafeArea())
         .presentationDragIndicator(.visible)
         .onDisappear { try? context.save() }
     }
@@ -510,14 +494,14 @@ struct CoolingItemDetails: View {
                         Label(host, systemImage: "arrow.up.right")
                             .labelStyle(TrailingIconLabelStyle())
                     }
-                    .foregroundStyle(Theme.blue)
+                    .foregroundStyle(Color.swBlue)
                 }
             }
             if item.colorName != nil || item.colorHex != nil {
                 row("colour") {
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(item.colorHex.map { Color(hex: $0) } ?? Theme.inkSoft)
+                            .fill(item.colorHex.map { Color(hex: $0) } ?? Color.swMuted)
                             .frame(width: 14, height: 14)
                             .overlay(Circle().strokeBorder(.black.opacity(0.1)))
                         Text(item.colorName ?? "")
@@ -532,13 +516,13 @@ struct CoolingItemDetails: View {
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack {
-            Text(title).foregroundStyle(Theme.inkSoft)
+            Text(title).foregroundStyle(Color.swMuted)
             Spacer(minLength: 12)
             content()
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Color.swInk)
                 .lineLimit(1)
         }
-        .font(Theme.body(15))
+        .font(SWTextStyle.body.font).tracking(SWTextStyle.body.tracking)
         .frame(minHeight: 28)
     }
 }
@@ -564,11 +548,9 @@ struct ShelfSettingsSheet: View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("waiting period")
-                    .font(Theme.display(30))
-                    .foregroundStyle(Theme.headlineGradient)
+                    .swText(.title)
                 Text("how long new saves rest before you decide")
-                    .font(Theme.body(14))
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.caption, color: .swMuted)
             }
 
             // Chips, like the wishlist's category filters
@@ -577,12 +559,11 @@ struct ShelfSettingsSheet: View {
                     let isOn = option == days
                     Button { days = option } label: {
                         Text("\(option) \(option == 1 ? "day" : "days")")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(isOn ? .white : Theme.ink)
+                            .swText(.caption, color: isOn ? .swPaper : .swInk)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(isOn ? AnyShapeStyle(Theme.pink) : AnyShapeStyle(Theme.paper), in: Capsule())
-                            .overlay(Capsule().strokeBorder(Theme.ink.opacity(isOn ? 0 : 0.08)))
+                            .background(isOn ? Color.swInk : Color.white, in: Capsule())
+                            .overlay(Capsule().stroke(Color.swLine, lineWidth: isOn ? 0 : 1))
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(isOn ? .isSelected : [])
@@ -591,14 +572,12 @@ struct ShelfSettingsSheet: View {
             .sensoryFeedback(.selection, trigger: days)
 
             Text("changes apply to everything still cooling, too.")
-                .font(.caption)
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
 
             ShelfSectionCard(label: "REMINDERS") {
                 HStack {
                     Text(reminderText)
-                        .font(Theme.body(15))
-                        .foregroundStyle(Theme.ink)
+                        .swText(.body)
                     Spacer()
                     reminderButton
                 }
@@ -606,19 +585,12 @@ struct ShelfSettingsSheet: View {
 
             Spacer(minLength: 0)
 
-            Button { dismiss() } label: {
-                Text("done")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Theme.ink, in: Capsule())
-            }
-            .buttonStyle(.plain)
+            Button("done") { dismiss() }
+                .buttonStyle(SWPrimaryButtonStyle())
         }
         .padding(20)
         .padding(.top, 8)
-        .background(Theme.cream.ignoresSafeArea())
+        .background(Color.swPaper.ignoresSafeArea())
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .task { reminderStatus = await ShelfNotifications.authorizationStatus() }
@@ -647,16 +619,14 @@ struct ShelfSettingsSheet: View {
                     reminderStatus = await ShelfNotifications.authorizationStatus()
                 }
             }
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Theme.blue)
+            .swText(.bodyStrong, color: .swBlue)
         case .denied:
             Button("Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
             }
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Theme.blue)
+            .swText(.bodyStrong, color: .swBlue)
         default:
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.green)
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.swBlue)
         }
     }
 }
@@ -667,7 +637,7 @@ private struct TrailingIconLabelStyle: LabelStyle {
     }
 }
 
-// MARK: - Previews
+// --- previews
 
 #Preview("Shelf") {
     ShelfView()

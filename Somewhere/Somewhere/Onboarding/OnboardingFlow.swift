@@ -171,12 +171,8 @@ struct WalkthroughContainer: View {
                 }
             } label: {
                 Text(model.activePage == 3 ? "get started" : "continue")
-                    .font(.custom("Inter-SemiBold", size: 16))
-                    .foregroundStyle(Color.swPaper)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color.swInk, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
+            .buttonStyle(SWPrimaryButtonStyle())
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }

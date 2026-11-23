@@ -29,27 +29,20 @@ struct SaveSuccessView: View {
                 .accessibilityHidden(true)
 
             Text("saved!")
-                .font(Theme.display(34))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.title)
 
             Text("\u{201C}\(title)\u{201D} is resting on your shelf for \(coolingDays) \(coolingDays == 1 ? "day" : "days").")
-                .font(Theme.body(16))
+                .swText(.body)
                 .multilineTextAlignment(.center)
 
             Text("when the time's up you'll decide to keep it or let it go.")
-                .font(Theme.body(13))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: Color.swMuted)
                 .multilineTextAlignment(.center)
 
             Button(action: onAddAnother) {
                 Label("add another", systemImage: "plus")
-                    .font(Theme.body(16, weight: .medium))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Theme.blue, in: Capsule())
-                    .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(SWPrimaryButtonStyle())
             .padding(.top, 10)
         }
         .padding(.horizontal, 8)
@@ -59,7 +52,7 @@ struct SaveSuccessView: View {
 
     // MARK: The animated check
 
-    private static let dotColours: [Color] = [Theme.pink, Theme.blue, Theme.sun, Theme.periwinkle, Theme.green]
+    private static let dotColours: [Color] = [Color.swStickerPink, Color.swBlue, Color.swStickerButter, Color.swStickerMint, Color.swSky]
 
     private var checkmark: some View {
         ZStack {
@@ -74,20 +67,20 @@ struct SaveSuccessView: View {
             }
 
             Circle()
-                .fill(Theme.greenSoft)
+                .fill(Color.swBlue50)
                 .frame(width: 104, height: 104)
                 .scaleEffect(popped ? 1 : 0.5)
 
             Circle()
                 .trim(from: 0, to: ring)
-                .stroke(Theme.green, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .stroke(Color.swBlue, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .frame(width: 104, height: 104)
                 .scaleEffect(popped ? 1 : 0.5)
 
             CheckShape()
                 .trim(from: 0, to: tick)
-                .stroke(Theme.green, style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+                .stroke(Color.swBlue, style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
                 .frame(width: 44, height: 34)
         }
     }
@@ -119,5 +112,5 @@ private struct CheckShape: Shape {
 #Preview {
     SaveSuccessView(title: "Zara long-sleeves", coolingDays: 3, onAddAnother: {})
         .padding(20)
-        .background(Theme.cream)
+        .background(Color.swPaper)
 }

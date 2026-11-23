@@ -7,6 +7,7 @@
 //  `item.voiceNoteFileName`, so Nicole's context page can play it too.
 //
 //  Needs NSMicrophoneUsageDescription (set in the project's build settings).
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -14,7 +15,7 @@ import SwiftData
 import AVFoundation
 import UIKit
 
-// MARK: - Recorder
+// --- recorder
 
 @MainActor
 @Observable
@@ -122,7 +123,7 @@ final class VoiceNoteRecorder {
     }
 }
 
-// MARK: - Saving onto the item
+// --- saving onto the item
 
 enum ShelfVoiceNotes {
     /// Attaches a new recording to the item, deleting the one it replaces.
@@ -139,7 +140,7 @@ enum ShelfVoiceNotes {
     }
 }
 
-// MARK: - View
+// --- view
 
 /// Record / play / re-record the "why I wanted it" voice note.
 /// Drop it anywhere you have a `SavedItem` (Mina: works after a save, too).
@@ -166,8 +167,7 @@ struct VoiceNoteRecorderView: View {
                             ShelfVoiceNotes.remove(from: item, in: context)
                         }
                     }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Theme.inkSoft)
+                    .swText(.caption, color: .swMuted)
                 } else {
                     Button {
                         Task { await recorder.start(for: item) }
@@ -177,21 +177,19 @@ struct VoiceNoteRecorderView: View {
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(.white)
                                 .frame(width: 34, height: 34)
-                                .background(Theme.pink, in: Circle())
+                                .background(Color.swStickerPink, in: Circle())
                             Text("record a voice note")
-                                .font(Theme.body(15, weight: .medium))
-                                .foregroundStyle(Theme.ink)
+                                .swText(.body)
                             Spacer(minLength: 0)
                         }
                         .padding(10)
-                        .background(Theme.pinkSoft.opacity(0.6), in: Capsule())
+                        .background(Color.swStickerPink.opacity(0.18), in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
                 if recorder.phase == .failed {
                     Text("couldn't start recording. try again?")
-                        .font(.caption)
-                        .foregroundStyle(Theme.pink)
+                        .swText(.caption, color: .swError)
                 }
             }
         }
@@ -210,19 +208,19 @@ struct VoiceNoteRecorderView: View {
     private var recordingRow: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Theme.pink)
+                .fill(Color.swStickerPink)
                 .frame(width: 10, height: 10)
                 .opacity(0.4 + recorder.level * 0.6)
 
             Text(Duration.seconds(recorder.elapsed), format: .time(pattern: .minuteSecond))
-                .font(.system(size: 15, weight: .medium).monospacedDigit())
-                .foregroundStyle(Theme.ink)
+                .swText(.bodyStrong)
+                .monospacedDigit()
 
             // Level meter
             GeometryReader { geo in
-                Capsule().fill(Theme.pink.opacity(0.2))
+                Capsule().fill(Color.swStickerPink.opacity(0.2))
                     .overlay(alignment: .leading) {
-                        Capsule().fill(Theme.pink)
+                        Capsule().fill(Color.swStickerPink)
                             .frame(width: max(6, geo.size.width * recorder.level))
                     }
             }
@@ -230,8 +228,7 @@ struct VoiceNoteRecorderView: View {
             .animation(.linear(duration: 0.1), value: recorder.level)
 
             Button("cancel") { recorder.cancel() }
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
 
             Button {
                 if let name = recorder.stop() { ShelfVoiceNotes.attach(name, to: item, in: context) }
@@ -240,25 +237,23 @@ struct VoiceNoteRecorderView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 34, height: 34)
-                    .background(Theme.pink, in: Circle())
+                    .background(Color.swStickerPink, in: Circle())
             }
             .accessibilityLabel("Stop recording")
         }
         .padding(.horizontal, 14)
         .frame(height: 54)
-        .background(Theme.pinkSoft.opacity(0.6), in: Capsule())
+        .background(Color.swStickerPink.opacity(0.18), in: Capsule())
     }
 
     private var deniedRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("microphone is off for somewhere")
-                .font(Theme.body(15, weight: .medium))
-                .foregroundStyle(Theme.ink)
+                .swText(.body)
             Button("turn it on in Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
             }
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Theme.blue)
+            .swText(.bodyStrong, color: .swBlue)
         }
     }
 }

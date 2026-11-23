@@ -3,7 +3,7 @@
 //  Somewhere — the bottom sheet people see after Share → Somewhere.
 //
 //  Shows the screenshot as a polaroid, with the name and link pre-filled
-//  (both editable), and a "save to wishlist" button. Styled from Theme.
+//  (both editable), and a "save to wishlist" button. Styled from DesignSystem.
 //
 //  Karan: the sheet now also opens for a shared page, where there's no
 //  picture until the page has been read (and sometimes none at all). Two
@@ -11,6 +11,7 @@
 //  says "page" instead of "screenshot".
 //
 //  Extension target only.
+//  Updated to use DesignSystem.swift (Muskaan).
 //
 
 import SwiftUI
@@ -29,7 +30,7 @@ struct SaveSheetView: View {
             switch model.phase {
             case .loading:
                 ProgressView()
-                    .tint(Theme.blue)
+                    .tint(Color.swBlue)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .failed(let message):
                 failure(message)
@@ -37,7 +38,7 @@ struct SaveSheetView: View {
                 content
             }
         }
-        .background(Theme.cream.ignoresSafeArea())
+        .background(Color.swPaper.ignoresSafeArea())
         .sensoryFeedback(.success, trigger: model.saveState == .saved)
         .onChange(of: model.saveState) { _, state in
             guard state == .saved else { return }
@@ -49,13 +50,12 @@ struct SaveSheetView: View {
         }
     }
 
-    // MARK: Top bar
+    // --- top bar
 
     private var topBar: some View {
         HStack {
             Button("cancel", action: onCancel)
-                .font(Theme.body(16, weight: .medium))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.body, color: .swMuted)
             Spacer()
         }
         .padding(.horizontal, 20)
@@ -63,7 +63,7 @@ struct SaveSheetView: View {
         .padding(.bottom, 6)
     }
 
-    // MARK: Main content
+    // --- main content
 
     private var content: some View {
         ScrollView {
@@ -85,8 +85,7 @@ struct SaveSheetView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("save to\nsomewhere")
-                    .font(Theme.display(30))
-                    .foregroundStyle(Theme.headlineGradient)
+                    .swText(.display)
                     .fixedSize(horizontal: false, vertical: true)
 
                 sourcePill
@@ -112,11 +111,12 @@ struct SaveSheetView: View {
                     pagePlaceholder
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 3))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .padding(6)
             .padding(.bottom, 14)
-            .background(Theme.paper, in: RoundedRectangle(cornerRadius: 6))
-            .shadow(color: .black.opacity(0.08), radius: 10, y: 5)
+            .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.swLine, lineWidth: 1))
+            .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
             .rotationEffect(.degrees(-2))
             .frame(width: 112)
             .accessibilityHidden(true)
@@ -125,10 +125,10 @@ struct SaveSheetView: View {
     /// Karan: stand-in artwork for a shared page.
     private var pagePlaceholder: some View {
         ZStack {
-            Theme.lavender
+            Color.swSky
             Image(systemName: model.isReading ? "ellipsis" : "link")
                 .font(.system(size: 22, weight: .light))
-                .foregroundStyle(Theme.periwinkle)
+                .foregroundStyle(Color.swBlue)
         }
     }
 
@@ -138,11 +138,10 @@ struct SaveSheetView: View {
             Image(systemName: source.symbol)
             Text(source.displayName)
         }
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(source.tint)
+        .swText(.chip, color: source.labelTint)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
-        .background(source.tint.opacity(0.1), in: Capsule())
+        .background(source.tint.opacity(0.18), in: Capsule())
         .accessibilityLabel("Saved from \(source.displayName)")
     }
 
@@ -150,50 +149,44 @@ struct SaveSheetView: View {
     private var helperText: some View {
         if model.isReading {
             HStack(spacing: 6) {
-                ProgressView().controlSize(.small).tint(Theme.blue)
+                ProgressView().controlSize(.small).tint(Color.swBlue)
                 // Karan: same spinner, right words for whichever we got.
                 Text(model.origin == .link ? "reading the page…" : "reading your screenshot…")
             }
-            .font(Theme.body(13))
-            .foregroundStyle(Theme.inkSoft)
+            .swText(.caption, color: .swMuted)
         } else {
             Text(model.foundSomething
                  ? "filled in what I could — fix anything that's off."
                  : (model.origin == .link
                     ? "that page didn't say much — add a name below."    // Karan
                     : "couldn't read much from this one — add a name below."))
-                .font(Theme.body(13))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    // MARK: Name + link
+    // --- name + link
 
     private var fieldsCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("NAME")
-                .font(Theme.label)
-                .foregroundStyle(Theme.blue)
+                .swText(.label, color: .swBlue)
 
             TextField("give it a name", text: $model.title, axis: .vertical)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(Theme.ink)
+                .swText(.headline)
                 .lineLimit(1...3)
                 .focused($focused)
 
-            Divider().overlay(Theme.ink.opacity(0.05))
+            Divider().overlay(Color.swLine)
 
             Text("LINK")
-                .font(Theme.label)
-                .foregroundStyle(Theme.blue)
+                .swText(.label, color: .swBlue)
 
             HStack(spacing: 8) {
                 Image(systemName: "link")
-                    .foregroundStyle(Theme.inkSoft)
+                    .foregroundStyle(Color.swMuted)
                 TextField("paste the link (optional)", text: $model.linkText)
-                    .font(Theme.body(16))
-                    .foregroundStyle(Theme.ink)
+                    .swText(.body)
                     .keyboardType(.URL)
                     .textContentType(.URL)
                     .textInputAutocapitalization(.never)
@@ -205,7 +198,7 @@ struct SaveSheetView: View {
                         model.linkText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Theme.inkSoft.opacity(0.6))
+                            .foregroundStyle(Color.swMuted.opacity(0.6))
                     }
                     .accessibilityLabel("Clear link")
                 }
@@ -213,24 +206,22 @@ struct SaveSheetView: View {
 
             if !model.isLinkValid {
                 Text("that doesn't look like a link yet")
-                    .font(.caption)
-                    .foregroundStyle(Theme.pink)
+                    .swText(.caption, color: .swError)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.ink.opacity(0.05)))
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.swLine, lineWidth: 1))
     }
 
-    // MARK: Save button
+    // --- save button
 
     private var saveBar: some View {
         VStack(spacing: 8) {
             if case .failed(let message) = model.saveState {
                 Text(message)
-                    .font(.caption)
-                    .foregroundStyle(Theme.pink)
+                    .swText(.caption, color: .swError)
                     .multilineTextAlignment(.center)
             }
 
@@ -244,11 +235,10 @@ struct SaveSheetView: View {
                     }
                     Text(buttonTitle)
                 }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.white)
+                .swText(.bodyStrong, color: .white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(model.saveState == .saved ? Theme.green : Theme.pink, in: Capsule())
+                .background(model.saveState == .saved ? Color.swStickerMint : Color.swStickerPink, in: Capsule())
             }
             .disabled(!model.canSave)
             .opacity(model.canSave || model.saveState == .saved || model.saveState == .saving ? 1 : 0.45)
@@ -257,7 +247,7 @@ struct SaveSheetView: View {
         .padding(.horizontal, 20)
         .padding(.top, 10)
         .padding(.bottom, 10)
-        .background(Theme.cream)
+        .background(Color.swPaper)
     }
 
     private var buttonTitle: String {
@@ -268,23 +258,20 @@ struct SaveSheetView: View {
         }
     }
 
-    // MARK: Can't save this
+    // --- can't save this
 
     private func failure(_ message: String) -> some View {
         VStack(spacing: 14) {
             Image(systemName: "photo.badge.exclamationmark")
                 .font(.system(size: 34, weight: .light))
-                .foregroundStyle(Theme.periwinkle)
+                .foregroundStyle(Color.swBlue)
             Text("can't save that one")
-                .font(Theme.display(22))
-                .foregroundStyle(Theme.headlineGradient)
+                .swText(.title)
             Text(message)
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
+                .swText(.caption, color: .swMuted)
                 .multilineTextAlignment(.center)
             Button("close", action: onCancel)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.blue)
+                .swText(.bodyStrong, color: .swBlue)
                 .padding(.top, 6)
         }
         .padding(.horizontal, 32)
