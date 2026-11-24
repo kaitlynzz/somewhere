@@ -85,7 +85,9 @@ struct SaveSheetView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("save to\nsomewhere")
-                    .swText(.display)
+                    .swText(.title)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)   // shrink rather than break "somewhere" mid-word
                     .fixedSize(horizontal: false, vertical: true)
 
                 sourcePill
@@ -235,11 +237,8 @@ struct SaveSheetView: View {
                     }
                     Text(buttonTitle)
                 }
-                .swText(.bodyStrong, color: .white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(model.saveState == .saved ? Color.swStickerMint : Color.swStickerPink, in: Capsule())
             }
+            .buttonStyle(SWPrimaryButtonStyle())
             .disabled(!model.canSave)
             .opacity(model.canSave || model.saveState == .saved || model.saveState == .saving ? 1 : 0.45)
             .animation(.snappy, value: model.saveState)
