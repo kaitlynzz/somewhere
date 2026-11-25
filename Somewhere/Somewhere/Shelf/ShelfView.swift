@@ -539,6 +539,8 @@ struct ShelfSettingsSheet: View {
 
     @State private var days = ShelfSettings.coolingDays
     @State private var reminderStatus: UNAuthorizationStatus = .notDetermined
+    @State private var confirmDelete = false
+    @AppStorage("somewhere.userEmail") private var userEmail = ""
 
     private var options: [Int] {
         ShelfSettings.dayOptions.contains(days) ? ShelfSettings.dayOptions : (ShelfSettings.dayOptions + [days]).sorted()
@@ -546,44 +548,67 @@ struct ShelfSettingsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("waiting period")
-                    .swText(.title)
-                Text("how long new saves rest before you decide")
-                    .swText(.caption, color: .swMuted)
-            }
-
-            // Chips, like the wishlist's category filters
-            HStack(spacing: 8) {
-                ForEach(options, id: \.self) { option in
-                    let isOn = option == days
-                    Button { days = option } label: {
-                        Text("\(option) \(option == 1 ? "day" : "days")")
-                            .swText(.caption, color: isOn ? .swPaper : .swInk)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(isOn ? Color.swInk : Color.white, in: Capsule())
-                            .overlay(Capsule().stroke(Color.swLine, lineWidth: isOn ? 0 : 1))
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("waiting period")
+                            .swText(.title)
+                        Text("how long new saves rest before you decide")
+                            .swText(.caption, color: .swMuted)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(isOn ? .isSelected : [])
+
+                    // Chips, like the wishlist's category filters
+                    HStack(spacing: 8) {
+                        ForEach(options, id: \.self) { option in
+                            let isOn = option == days
+                            Button { days = option } label: {
+                                Text("\(option) \(option == 1 ? "day" : "days")")
+                                    .swText(.caption, color: isOn ? .swPaper : .swInk)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(isOn ? Color.swInk : Color.white, in: Capsule())
+                                    .overlay(Capsule().stroke(Color.swLine, lineWidth: isOn ? 0 : 1))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(isOn ? .isSelected : [])
+                        }
+                    }
+                    .sensoryFeedback(.selection, trigger: days)
+
+                    Text("changes apply to everything still cooling, too.")
+                        .swText(.caption, color: .swMuted)
+
+                    ShelfSectionCard(label: "REMINDERS") {
+                        HStack {
+                            Text(reminderText)
+                                .swText(.body)
+                            Spacer()
+                            reminderButton
+                        }
+                    }
+
+                    // Muskaan: the account lives on this phone (AccountStore)
+                    ShelfSectionCard(label: "ACCOUNT") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("signed in as \(accountName)")
+                                .swText(.body)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            HStack {
+                                Button("sign out") {
+                                    AccountStore.signOut()
+                                    dismiss()
+                                }
+                                .swText(.bodyStrong, color: .swBlue)
+                                Spacer()
+                                Button("delete account") { confirmDelete = true }
+                                    .swText(.bodyStrong, color: .swError)
+                            }
+                        }
+                    }
                 }
             }
-            .sensoryFeedback(.selection, trigger: days)
-
-            Text("changes apply to everything still cooling, too.")
-                .swText(.caption, color: .swMuted)
-
-            ShelfSectionCard(label: "REMINDERS") {
-                HStack {
-                    Text(reminderText)
-                        .swText(.body)
-                    Spacer()
-                    reminderButton
-                }
-            }
-
-            Spacer(minLength: 0)
+            .scrollBounceBehavior(.basedOnSize)
 
             Button("done") { dismiss() }
                 .buttonStyle(SWPrimaryButtonStyle())
@@ -591,14 +616,33 @@ struct ShelfSettingsSheet: View {
         .padding(20)
         .padding(.top, 8)
         .background(Color.swPaper.ignoresSafeArea())
-        .presentationDetents([.medium])
+        .presentationDetents([.fraction(0.72), .large])
         .presentationDragIndicator(.visible)
+        .confirmationDialog("delete your account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("delete account and everything saved", role: .destructive) {
+                AccountStore.deleteAccount(in: context)
+                dismiss()
+            }
+            Button("cancel", role: .cancel) {}
+        } message: {
+            Text(deleteMessage)
+        }
         .task { reminderStatus = await ShelfNotifications.authorizationStatus() }
         .onChange(of: days) { _, newValue in
             ShelfSettings.coolingDays = newValue
             cooling.forEach { $0.applyCoolingPeriod(ShelfSettings.coolingPeriod) }
             try? context.save()
         }
+    }
+
+    private var accountName: String {
+        AccountStore.current?.displayName ?? (userEmail.isEmpty ? "this phone" : userEmail)
+    }
+
+    private var deleteMessage: String {
+        let base = "this removes your account and every save, note and voice note on this phone. it can't be undone."
+        guard AccountStore.current?.kind == .apple else { return base }
+        return base + " to fully disconnect your Apple ID too: Settings → your name → Sign in with Apple → somewhere → Stop Using."
     }
 
     private var reminderText: String {

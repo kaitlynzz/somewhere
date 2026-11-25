@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 // onboarding result payload saved locally
 struct OnboardingResult: Codable, Equatable {
@@ -77,24 +78,33 @@ final class OnboardingModel {
             return
         }
 
-        let formattedEmail = email.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        let accountKey = "account_pwd_\(formattedEmail)"
-
-        if isSigningUp {
-            // save new user credentials locally
-            UserDefaults.standard.set(password, forKey: accountKey)
-            withAnimation(.snappy(duration: 0.35)) { phase = .walkthrough }
-        } else {
-            // verify password matches saved account
-            if let savedPassword = UserDefaults.standard.string(forKey: accountKey) {
-                if savedPassword == password {
-                    withAnimation(.snappy(duration: 0.35)) { phase = .walkthrough }
-                } else {
-                    errorMessage = "Incorrect password. Please try again."
-                }
+        do {
+            // Muskaan: passwords are hashed into the Keychain (AccountStore), never stored as text.
+            if isSigningUp {
+                _ = try AccountStore.signUp(email: email, password: password)
             } else {
-                errorMessage = "No account found for this email. Tap below to sign up."
+                _ = try AccountStore.signIn(email: email, password: password)
             }
+            password = ""
+            withAnimation(.snappy(duration: 0.35)) { phase = .walkthrough }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Sign in with Apple covers both sign-up and sign-in.
+    func completeAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        errorMessage = nil
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
+            let account = AccountStore.signInWithApple(credential)
+            email = account.email ?? ""
+            withAnimation(.snappy(duration: 0.35)) { phase = .walkthrough }
+        case .failure(let error):
+            // Closing the Apple sheet isn't an error worth showing.
+            if (error as? ASAuthorizationError)?.code == .canceled { return }
+            errorMessage = "Couldn't sign in with Apple. Please try again."
         }
     }
 
