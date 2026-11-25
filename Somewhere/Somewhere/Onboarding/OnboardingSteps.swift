@@ -64,7 +64,9 @@ struct SaveAnywhereStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // section header
+            Spacer(minLength: 12)
+
+            // section header (sits just above its demo, not pinned to the top)
             VStack(spacing: 6) {
                 Text("save from anywhere.")
                     .swText(.title)
@@ -74,9 +76,8 @@ struct SaveAnywhereStep: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 12)
 
-            Spacer()
+            Color.clear.frame(height: 28)
 
             // animated focus-target share sheet
             ShareSheetMock()
@@ -215,7 +216,9 @@ struct PlacesStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // section header
+            Spacer(minLength: 12)
+
+            // section header (sits just above its demo, not pinned to the top)
             VStack(spacing: 6) {
                 Text("it sorts itself.")
                     .swText(.title)
@@ -225,9 +228,8 @@ struct PlacesStep: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 12)
 
-            Spacer(minLength: 16)
+            Color.clear.frame(height: 24)
 
             // aspirational wishlist preview box
             VStack(spacing: 12) {
@@ -248,7 +250,7 @@ struct PlacesStep: View {
             .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.swLine, lineWidth: 1))
             .padding(.horizontal, 24)
 
-            Spacer(minLength: 16)
+            Color.clear.frame(height: 20)
 
             // category selector grid
             VStack(spacing: 12) {
@@ -298,11 +300,12 @@ struct PlacesStep: View {
             }
             .padding(.horizontal, 24)
 
-            Spacer(minLength: 16)
+            Color.clear.frame(height: 16)
 
             Text("\(model.places.count) places active")
                 .swText(.caption, color: Color.swMuted)
-                .padding(.bottom, 16)
+
+            Spacer(minLength: 16)
         }
         .alert("add a place", isPresented: $adding) {
             TextField("e.g. kitchen", text: $newPlace)
@@ -379,7 +382,9 @@ struct CoolingShelfStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // section header
+            Spacer(minLength: 12)
+
+            // section header (sits just above its demo, not pinned to the top)
             VStack(spacing: 6) {
                 Text("the cooling shelf.")
                     .swText(.title)
@@ -389,9 +394,8 @@ struct CoolingShelfStep: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 12)
 
-            Spacer(minLength: 12)
+            Color.clear.frame(height: 24)
 
             // swipe visual cue banner
             if verdict == nil {
@@ -439,7 +443,7 @@ struct CoolingShelfStep: View {
             .frame(maxWidth: .infinity)
             .frame(height: 240)
 
-            Spacer(minLength: 12)
+            Color.clear.frame(height: 20)
 
             // feature description banner
             VStack(spacing: 4) {
@@ -450,7 +454,8 @@ struct CoolingShelfStep: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 16)
+
+            Spacer(minLength: 16)
         }
     }
 

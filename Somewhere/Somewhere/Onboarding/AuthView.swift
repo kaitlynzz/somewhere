@@ -7,6 +7,7 @@
 
 
 import SwiftUI
+import AuthenticationServices
 
 // sign up / sign in auth view
 struct AuthView: View {
@@ -81,6 +82,25 @@ struct AuthView: View {
             .buttonStyle(SWPrimaryButtonStyle())
             .disabled(!model.isFormValid)
             .opacity(model.isFormValid ? 1.0 : 0.45)
+            .padding(.bottom, 14)
+
+            // or: Sign in with Apple (one button handles sign up and sign in)
+            HStack(spacing: 12) {
+                Rectangle().fill(Color.swLine).frame(height: 1)
+                Text("or").swText(.caption, color: .swMuted)
+                Rectangle().fill(Color.swLine).frame(height: 1)
+            }
+            .padding(.bottom, 14)
+
+            SignInWithAppleButton(model.isSigningUp ? .signUp : .signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                model.completeAppleSignIn(result)
+            }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .id(model.isSigningUp)   // relabel when switching sign up / sign in
             .padding(.bottom, 16)
 
             // mode toggle

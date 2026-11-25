@@ -7,12 +7,29 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct RootView: View {
     @AppStorage("somewhere.isLoggedIn") private var isLoggedIn = false
     @AppStorage("somewhere.userEmail") private var userEmail = ""
 
     var body: some View {
+        content
+            .task {
+                // Muskaan: hash any old plain-text passwords into the Keychain,
+                // and sign out if someone stopped using Sign in with Apple for us.
+                AccountStore.migrateLegacyPasswords()
+                if await !AccountStore.appleCredentialIsValid() { isLoggedIn = false }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: ASAuthorizationAppleIDProvider.credentialRevokedNotification)) { _ in
+                AccountStore.signOut()
+                isLoggedIn = false
+            }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         if isLoggedIn {
             MainTabView()
         } else {
